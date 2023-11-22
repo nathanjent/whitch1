@@ -19,5 +19,5 @@
 // and interrupt handlers correctly. It will also handle creating the `Gba` struct for you.
 #[agb::entry]
 fn main(mut gba: agb::Gba) -> ! {
-    agb::no_game(gba);
+    whitch::entry(gba)
 }

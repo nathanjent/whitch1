@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="5" nextobjectid="25">
+ <properties>
+  <property name="NAME" value="Level 1 - Let's Go!"/>
+ </properties>
+ <tileset firstgid="1" source="../bg.tsx"/>
+ <layer id="1" name="bg" width="32" height="32" locked="1">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYBzFo3iEYmUoZkZigzALne0nhJHdR0234bPTGQ+fWm5At9OFgHonAm6GuYuJQLjB5KkVjoTchQsPdPofxaN4FI/iUTyKR/EoHsUjCwMABKAM8w==
+  </data>
+ </layer>
+ <layer id="3" name="ground" width="32" height="32">
+  <data encoding="base64" compression="zlib">
+   eJztkMsNgzAQRH2JA4VgoBBC3Aj030HW0o4yWoGScMhpnjTCLJ95dkpCCHHOzdJZ+jDrj1//ic5z97R1pvvWMVielpm6F0u96MDuq/+7ZaQr1tW7sM50jxm8v3UZ6Lu2Lp6HZQpOJXgVupbgzS44O+w3p/fZLvT97n2te/P3eTZR4DWGZ+vJHmrogyd7ow/dfEZzmO3UuX2YY4Z9sDt7nnHkdAX8hx2jvxBCCCHEP3kBZDIa2g==
+  </data>
+ </layer>
+ <objectgroup id="4" name="collision" visible="0">
+  <object id="14" x="0" y="75.25" width="70" height="23.25"/>
+  <object id="20" x="69.25" y="82.25" width="87.75" height="17"/>
+  <object id="15" x="79" y="91.25" width="110.5" height="13"/>
+  <object id="16" x="202.25" y="90.5" width="55.5" height="25.25"/>
+  <object id="17" x="189.25" y="98.25" width="13" height="16.5"/>
+  <object id="18" x="234" y="75" width="10.75" height="17.25"/>
+  <object id="23" x="114.75" y="66.5" width="10.75" height="9"/>
+  <object id="22" x="75" y="67.25" width="17.25" height="17"/>
+  <object id="24" x="107.25" y="74.5" width="26" height="9.5"/>
+  <object id="19" x="242.75" y="82.25" width="14.75" height="11.5"/>
+ </objectgroup>
+ <objectgroup id="2" name="entities" class="Bat Spawns">
+  <object id="1" name="BAT" x="232.545" y="25.0909">
+   <point/>
+  </object>
+  <object id="2" name="PLAYER" x="26.6364" y="71.6818">
+   <point/>
+  </object>
+  <object id="3" name="BAT" x="64.7273" y="11.0909">
+   <point/>
+  </object>
+  <object id="4" name="BAT" x="154.364" y="43.4545">
+   <point/>
+  </object>
+  <object id="5" name="BAT" x="193.636" y="33.8182">
+   <point/>
+  </object>
+  <object id="13" name="DOOR" x="210.5" y="87">
+   <point/>
+  </object>
+ </objectgroup>
+</map>
