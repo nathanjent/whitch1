@@ -12,7 +12,7 @@ impl<'a> Behavior {
 }
 
 impl<'a> Behavior {
-    pub fn update(&mut self, object: &'a OamManaged<'a>) {
+    pub fn update(&mut self) {
         
     }
 }

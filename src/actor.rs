@@ -1,12 +1,13 @@
+use agb::display::object::SpriteLoader;
+use agb::display::object::OamIterator;
 use crate::behaviors::Behavior;
-use agb::display::object::OamManaged;
 use agb::{
     display::object::Object,
     fixnum::{FixedNum, Rect, Vector2D},
 };
 use generational_arena::Arena;
 
-pub struct Entity<'a> {
+pub struct Actor<'a> {
     sprite: Object<'a>,
     position: Vector2D<FixedNum<8>>,
     velocity: Vector2D<FixedNum<8>>,
@@ -15,7 +16,7 @@ pub struct Entity<'a> {
     behaviors: Arena<Behavior>,
 }
 
-impl<'a> Entity<'a> {
+impl<'a> Actor<'a> {
     pub fn new(sprite: Object<'a>, collision_mask: Rect<FixedNum<8>>) -> Self {
         Self {
             sprite,
@@ -27,9 +28,12 @@ impl<'a> Entity<'a> {
         }
     }
 
-    pub fn update(&mut self, object: &'a OamManaged<'a>) {
+    pub fn update(&mut self) {
         for (i, behavior) in self.behaviors.iter_mut() {
-            behavior.update(object);
+            behavior.update();
         }
+    }
+
+    pub fn render(&self, loader: &mut SpriteLoader, oam: &mut OamIterator) {
     }
 }

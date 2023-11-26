@@ -1,27 +1,30 @@
-use agb::{display::object::Tag, fixnum::Vector2D};
+use crate::backgrounds;
 use crate::resources;
+use agb::display::tiled::RegularMap;
+use agb::display::tiled::VRamManager;
+use agb::{display::object::Tag, fixnum::Vector2D};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-pub enum Item {
+pub enum Entity {
     Player,
     Bat,
     Door,
 }
 
-impl Item {
+impl Entity {
     pub fn shadow_tag(&self) -> &'static Tag {
         match self {
-            Item::Player => resources::PLAYER,
-            Item::Bat => resources::BAT,
-            Item::Door => resources::DOOR,
+            Entity::Player => resources::W_IDLE,
+            Entity::Bat => resources::BAT,
+            Entity::Door => resources::DOOR,
         }
     }
 
     pub fn tag(&self) -> &'static Tag {
         match self {
-            Item::Player => resources::PLAYER,
-            Item::Bat => resources::BAT,
-            Item::Door => resources::DOOR,
+            Entity::Player => resources::W_IDLE,
+            Entity::Bat => resources::BAT,
+            Entity::Door => resources::DOOR,
         }
     }
 
@@ -30,26 +33,23 @@ impl Item {
         const ZERO: Vector2D<i32> = Vector2D::new(0, 0);
 
         match self {
-            Item::Player => STANDARD,
-            Item::Bat => STANDARD,
-            Item::Door => ZERO,
+            Entity::Player => STANDARD,
+            Entity::Bat => STANDARD,
+            Entity::Door => ZERO,
         }
     }
 }
 
-pub struct Entity(pub Item, pub Vector2D<i32>);
+pub struct EntityWithPosition(pub Entity, pub Vector2D<i32>);
 
 pub struct Level {
-    pub starting_positions: &'static [Entity],
+    pub starting_positions: &'static [EntityWithPosition],
     pub name: &'static str,
 }
 
 impl Level {
     #[allow(unused_variables)]
-    const fn new(
-        starting_positions: &'static [Entity],
-        name: &'static str,
-    ) -> Self {
+    const fn new(starting_positions: &'static [EntityWithPosition], name: &'static str) -> Self {
         Self {
             starting_positions,
             name,
@@ -71,4 +71,3 @@ mod levels {
 
     include!(concat!(env!("OUT_DIR"), "/levels.rs"));
 }
-

@@ -6,8 +6,6 @@ use std::io::{BufWriter, Write};
 use std::str::FromStr;
 use tiled::ObjectLayer;
 
-use tiled::Layer;
-
 const LEVEL_NAMES: &[&str] = &["level1"];
 
 fn main() {
@@ -25,7 +23,6 @@ fn main() {
 
     let tilemaps_output = quote! {
         use agb::display::tiled::TileSetting;
-
         pub const LEVELS_MAP: &[&[TileSetting]] = &[#(#levels_tiles),*];
     };
 
@@ -62,17 +59,17 @@ fn load_tmx(loader: &mut tiled::Loader, filename: &str) -> tiled::Map {
     loader.load_tmx_map(filename).expect("failed to load map")
 }
 
-enum Entity {
+enum MapEntity {
     Player,
     Bat,
     Door,
 }
 
-impl FromStr for Entity {
+impl FromStr for MapEntity {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use Entity::*;
+        use MapEntity::*;
 
         Ok(match s {
             "PLAYER" => Player,
@@ -83,19 +80,19 @@ impl FromStr for Entity {
     }
 }
 
-impl quote::ToTokens for Entity {
+impl quote::ToTokens for MapEntity {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        use Entity::*;
+        use MapEntity::*;
 
         tokens.append_all(match self {
-            Bat => quote!(Item::Bat),
-            Player => quote!(Item::Player),
-            Door => quote!(Item::Door),
+            Bat => quote!(Entity::Bat),
+            Player => quote!(Entity::Player),
+            Door => quote!(Entity::Door),
         })
     }
 }
 
-struct EntityWithPosition(Entity, (i32, i32));
+struct EntityWithPosition(MapEntity, (i32, i32));
 
 impl quote::ToTokens for EntityWithPosition {
     fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -104,7 +101,7 @@ impl quote::ToTokens for EntityWithPosition {
         let location = quote!(Vector2D::new(#pos_x, #pos_y));
         let item = &self.0;
 
-        tokens.append_all(quote!(Entity(#item, #location)))
+        tokens.append_all(quote!(EntityWithPosition(#item, #location)))
     }
 }
 
@@ -131,7 +128,7 @@ fn extract_objects_from_layer(
     objects: ObjectLayer<'_>,
 ) -> impl Iterator<Item = EntityWithPosition> + '_ {
     objects.objects().map(|obj| {
-        let entity: Entity = obj
+        let entity: MapEntity = obj
             .name
             .parse()
             .unwrap_or_else(|_| panic!("unknown object type {}", obj.name));
@@ -153,27 +150,31 @@ fn export_tiles(map: &tiled::Map, background: TokenStream) -> TokenStream {
         .as_tile_layer()
         .expect("The ground layer should be a tile layer");
 
-    let width = map_tiles.width().unwrap();
+    let width = map_tiles.width().expect("Map should be finite");
     let height = map_tiles.height().unwrap();
 
     let map_tiles = (0..(height * width))
         .map(|pos| (pos % width, pos / width))
         .map(|(x, y)| {
-        let tile = map_tiles.get_tile(x as i32, y as i32);
+            let tile = map_tiles.get_tile(x as i32, y as i32);
 
-        match tile {
-            Some(tile) => {
-                let vflip = tile.flip_v;
-                let hflip = tile.flip_h;
-                let tile_id = tile.id();
+            match tile {
+                Some(tile) => {
+                    let tile_id = tile.id();
+                    let vflip = tile.flip_v;
+                    let hflip = tile.flip_h;
 
-                quote! { backgrounds::#background.tile_settings[#tile_id as usize].hflip(#hflip).vflip(#vflip) }
+                    quote! {
+                        backgrounds::#background.tile_settings[#tile_id as usize]
+                            .hflip(#hflip)
+                            .vflip(#vflip)
+                    }
+                }
+                None => {
+                    quote! { TileSetting::BLANK }
+                }
             }
-            None => {
-                quote! { TileSetting::BLANK }
-            }
-        }
-    });
+        });
 
     quote! {&[#(#map_tiles),*]}
 }
@@ -188,28 +189,11 @@ fn export_level(map: &tiled::Map) -> Level {
     let starting_positions = extract_objects_from_layer(objects);
 
     let Some(tiled::PropertyValue::StringValue(level_name)) = map.properties.get("NAME") else {
-        panic!("Level name must be a string")
+        panic!("Level property 'NAME' must be a string")
     };
 
     Level {
         starting_positions: starting_positions.collect(),
         name: level_name.clone(),
     }
-}
-
-fn get_spawn_locations(object_group: &Layer, enemy_type: &str) -> (Vec<u16>, Vec<u16>) {
-    let mut spawns = object_group
-        .as_object_layer()
-        .unwrap()
-        .objects()
-        .filter(|object| object.user_type == enemy_type)
-        .map(|object| (object.x as u16, object.y as u16))
-        .collect::<Vec<_>>();
-
-    spawns.sort_by(|a, b| a.0.cmp(&b.0));
-
-    let xs = spawns.iter().map(|pos| pos.0).collect::<Vec<_>>();
-    let ys = spawns.iter().map(|pos| pos.1).collect::<Vec<_>>();
-
-    (xs, ys)
 }

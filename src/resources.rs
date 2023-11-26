@@ -25,7 +25,8 @@ macro_rules! named_tag {
 named_tag!(
     SPRITES,
     [
-        PLAYER,
+        W_IDLE,
+        W_RUN,
         BAT,
         DOOR,
     ]
