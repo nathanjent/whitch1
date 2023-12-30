@@ -70,6 +70,7 @@ pub fn entry(mut gba: agb::Gba) -> ! {
         let level = Level::get_level(current_level);
 
         let mut game = Game::new(level);
+        game.load_level(&mut sprite_loader);
 
         let bat_sprite = sprite_loader.get_vram_sprite(resources::BAT.sprite(0));
         let mut bat_object = ObjectUnmanaged::new(bat_sprite);
@@ -101,7 +102,6 @@ pub fn entry(mut gba: agb::Gba) -> ! {
                 slot.set(&bat_object);
             }
 
-            writer.commit(oam);
 
             game.update(&mut sprite_loader);
 
@@ -110,6 +110,7 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
             game.render(&mut sprite_loader, oam);
 
+            writer.commit(oam);
         }
     }
 }

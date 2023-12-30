@@ -1,4 +1,5 @@
 use crate::level::Entity;
+use crate::resources;
 use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::SpriteLoader;
@@ -35,20 +36,26 @@ impl<'a> Game<'a> {
     //    self.level.clear(vram);
     //}
 
-    pub fn load_level(&mut self) {
+    pub fn load_level(&mut self, sprite_loader: &mut SpriteLoader) {
         for EntityWithPosition(entity, Vector2D { x, y }) in self.level.starting_positions {
             let actor = match entity {
                 Entity::Player => {
                     let collision_mask = Rect::new((*x, *y).into(), (16, 16).into());
-                    Actor::new(entity.tag(), collision_mask)
+                    let sprite = sprite_loader.get_vram_sprite(resources::W_IDLE.sprite(0));
+                    let obj = ObjectUnmanaged::new(sprite);
+                    Actor::new(obj, entity.tag(), collision_mask, (*x, *y).into())
                 }
                 Entity::Bat => {
                     let collision_mask = Rect::new((*x, *y).into(), (16, 16).into());
-                    Actor::new(entity.tag(), collision_mask)
+                    let sprite = sprite_loader.get_vram_sprite(resources::BAT.sprite(0));
+                    let obj = ObjectUnmanaged::new(sprite);
+                    Actor::new(obj, entity.tag(), collision_mask, (*x, *y).into())
                 }
                 Entity::Door => {
                     let collision_mask = Rect::new((*x, *y).into(), (16, 16).into());
-                    Actor::new(entity.tag(), collision_mask)
+                    let sprite = sprite_loader.get_vram_sprite(resources::DOOR.sprite(0));
+                    let obj = ObjectUnmanaged::new(sprite);
+                    Actor::new(obj, entity.tag(), collision_mask, (*x, *y).into())
                 }
             };
 
@@ -81,9 +88,13 @@ impl<'a> Game<'a> {
             .sort_unstable_by_key(|r| r.sorting_number());
     }
 
-    pub fn render(&self, loader: &mut SpriteLoader, oam: &mut OamIterator) {
+    pub fn render(&mut self, loader: &mut SpriteLoader, oam: &mut OamIterator) {
         for item in self.render_cache.iter() {
             item.render(oam);
+        }
+
+        for (i, actor) in self.actors.iter_mut() {
+            actor.render(loader, oam);
         }
     }
 }
