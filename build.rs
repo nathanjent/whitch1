@@ -93,6 +93,7 @@ impl quote::ToTokens for MapEntity {
 }
 
 struct EntityWithPosition(MapEntity, (i32, i32));
+struct CollisionRect((i32, i32), (i32, i32));
 
 impl quote::ToTokens for EntityWithPosition {
     fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -105,39 +106,34 @@ impl quote::ToTokens for EntityWithPosition {
     }
 }
 
+impl quote::ToTokens for CollisionRect {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let pos_x = self.0 .0;
+        let pos_y = self.0 .1;
+        let location = quote!(Vector2D::new(#pos_x, #pos_y));
+        let width = &self.1 .0;
+        let height = &self.1 .1;
+        let size = quote!(Vector2D::new(#width, #height));
+        tokens.append_all(quote! {
+            Rect { position: #location, size: #size }
+        })
+    }
+}
+
 impl quote::ToTokens for Level {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let starting_positions = &self.starting_positions;
         let name = &self.name;
+        let collision_rects = &self.collision_rects;
 
         tokens.append_all(quote! {
             Level::new(
                 &[#(#starting_positions),*],
                 #name,
+                &[#(#collision_rects),*],
             )
         })
     }
-}
-
-struct Level {
-    starting_positions: Vec<EntityWithPosition>,
-    name: String,
-}
-
-fn extract_objects_from_layer(
-    objects: ObjectLayer<'_>,
-) -> impl Iterator<Item = EntityWithPosition> + '_ {
-    objects.objects().map(|obj| {
-        let entity: MapEntity = obj
-            .name
-            .parse()
-            .unwrap_or_else(|_| panic!("unknown object type {}", obj.name));
-
-        let x = (obj.x / 16.0) as i32;
-        let y = (obj.y / 16.0) as i32;
-
-        EntityWithPosition(entity, (x, y))
-    })
 }
 
 fn export_tiles(map: &tiled::Map, background: TokenStream) -> TokenStream {
@@ -179,21 +175,69 @@ fn export_tiles(map: &tiled::Map, background: TokenStream) -> TokenStream {
     quote! {&[#(#map_tiles),*]}
 }
 
+struct Level {
+    starting_positions: Vec<EntityWithPosition>,
+    name: String,
+    collision_rects: Vec<CollisionRect>,
+}
+
+enum Shape {
+    Rect(CollisionRect),
+    Point(EntityWithPosition),
+}
+
 fn export_level(map: &tiled::Map) -> Level {
-    let objects = map
+    let entity_layer = map
         .layers()
         .find(|layer| layer.name == "entities")
         .and_then(|layer| layer.as_object_layer())
-        .expect("The entities object layer should exist");
+        .expect("The 'entities' object layer should exist");
 
-    let starting_positions = extract_objects_from_layer(objects);
+    let starting_positions = extract_objects_from_layer(entity_layer)
+        .map(|shape| match shape {
+            Shape::Point(entity) => entity,
+            _ => panic!("expected points only"),
+        })
+        .collect();
+
+    let collision_layer = map
+        .layers()
+        .find(|layer| layer.name == "collision")
+        .and_then(|layer| layer.as_object_layer())
+        .expect("The 'collision' object layer should exist");
+
+    let collision_rects = extract_objects_from_layer(collision_layer)
+        .map(|shape| match shape {
+            Shape::Rect(rect) => rect,
+            _ => panic!("expected rectangles only"),
+        })
+        .collect();
 
     let Some(tiled::PropertyValue::StringValue(level_name)) = map.properties.get("NAME") else {
         panic!("Level property 'NAME' must be a string")
     };
 
     Level {
-        starting_positions: starting_positions.collect(),
+        starting_positions,
         name: level_name.clone(),
+        collision_rects,
     }
+}
+
+fn extract_objects_from_layer(objects: ObjectLayer<'_>) -> impl Iterator<Item = Shape> + '_ {
+    objects.objects().into_iter().map(|obj| match obj.shape {
+        tiled::ObjectShape::Rect { width, height } => Shape::Rect(CollisionRect(
+            (obj.x as i32, obj.y as i32),
+            (width as i32, height as i32),
+        )),
+        tiled::ObjectShape::Point(x, y) => {
+            let entity: MapEntity = obj
+                .name
+                .parse()
+                .unwrap_or_else(|_| panic!("unknown object type {}", obj.name));
+
+            Shape::Point(EntityWithPosition(entity, (x as i32, y as i32)))
+        }
+        _ => panic!("unsupported object shape"),
+    })
 }

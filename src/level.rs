@@ -1,8 +1,5 @@
-use crate::backgrounds;
 use crate::resources;
-use agb::display::tiled::RegularMap;
-use agb::display::tiled::VRamManager;
-use agb::{display::object::Tag, fixnum::Vector2D};
+use agb::{display::object::Tag, fixnum::{Vector2D, Rect}};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum Entity {
@@ -45,14 +42,20 @@ pub struct EntityWithPosition(pub Entity, pub Vector2D<i32>);
 pub struct Level {
     pub starting_positions: &'static [EntityWithPosition],
     pub name: &'static str,
+    pub collision_rects: &'static [Rect<i32>],
 }
 
 impl Level {
     #[allow(unused_variables)]
-    const fn new(starting_positions: &'static [EntityWithPosition], name: &'static str) -> Self {
+    const fn new(
+        starting_positions: &'static [EntityWithPosition],
+        name: &'static str,
+        collision_rects: &'static [Rect<i32>],
+    ) -> Self {
         Self {
             starting_positions,
             name,
+            collision_rects,
         }
     }
 
@@ -66,8 +69,9 @@ impl Level {
 }
 
 mod levels {
-    use super::*;
-    use agb::fixnum::Vector2D;
+    use agb::fixnum::{Vector2D, Rect};
+    use crate::Level;
+    use crate::level::{EntityWithPosition, Entity};
 
     include!(concat!(env!("OUT_DIR"), "/levels.rs"));
 }

@@ -4,14 +4,18 @@
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![cfg_attr(test, test_runner(agb::test_runner::test_runner))]
 
-use agb::display::HEIGHT;
 use agb::display::WIDTH;
+use agb::display::object::PaletteVram;
+use agb::display::object::Size;
+use agb::display::object::ObjectTextRender;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::TextAlignment;
+use agb::display::palette16::Palette16;
 use agb::display::tiled::TiledMap;
-use agb::fixnum::FixedNum;
 use agb::fixnum::Vector2D;
+
 use core::fmt::Write;
+
 extern crate alloc;
 
 mod actor;
@@ -22,27 +26,18 @@ mod level;
 mod resources;
 mod sfx;
 
-use agb::display::object::ObjectTextRender;
-use agb::display::object::PaletteVram;
-use agb::display::object::Size;
-use agb::display::palette16::Palette16;
 use agb::display::tiled::RegularBackgroundSize;
 use agb::display::tiled::TileFormat;
-use agb::display::Font;
 use agb::display::Priority;
-use agb::include_font;
 use agb::interrupt::VBlank;
 use agb::sound::mixer::Frequency;
-use core::include_bytes;
 use game::Game;
 use level::Level;
 
-const FONT: Font = include_font!("fonts/yoster.ttf", 12);
 
 pub fn entry(mut gba: agb::Gba) -> ! {
     let vblank = VBlank::get();
     let (mut unmanaged, mut sprite_loader) = gba.display.object.get_unmanaged();
-    //let managed = gba.display.object.get_managed();
 
     let mut mixer = gba.mixer.mixer(Frequency::Hz32768);
     mixer.enable();
@@ -55,24 +50,35 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
     backgrounds::load_palettes(&mut vram);
 
+    let mut palette = [0x0; 16];
+    palette[1] = 0xFF_FF;
+    let palette = Palette16::new(palette);
+    let palette = PaletteVram::new(&palette).unwrap();
+    let mut writer = ObjectTextRender::new(&resources::FONT, Size::S16x16, palette);
+    let _ = writeln!(writer, "Hello, World!");
+    writer.layout((WIDTH, 40).into(), TextAlignment::Left, 2);
+
     let current_level = 0;
     loop {
         let mut level_bg = tiled.background(
-            Priority::P0,
+            Priority::P1,
             RegularBackgroundSize::Background32x32,
             TileFormat::FourBpp,
         );
+
         backgrounds::load_level_background(&mut level_bg, &mut vram, current_level);
         let level = Level::get_level(current_level);
 
         let mut game = Game::new(level);
 
-        //let mut bat_sprite = managed.object_sprite(resources::BAT.animation_sprite(0));
         let bat_sprite = sprite_loader.get_vram_sprite(resources::BAT.sprite(0));
         let mut bat_object = ObjectUnmanaged::new(bat_sprite);
 
-        let mut position: Vector2D<i32> = (30,30).into();
+        let mut position: Vector2D<i32> = (30, 30).into();
+
         loop {
+            writer.next_letter_group();
+            writer.update((0, 0).into());
             sfx.frame();
             vblank.wait_for_vblank();
             input.update();
@@ -89,24 +95,21 @@ pub fn entry(mut gba: agb::Gba) -> ! {
                 agb::input::Tri::Zero => (),
             }
 
-            // unmanaged
             let oam = &mut unmanaged.iter();
             bat_object.show().set_position(position);
             if let Some(slot) = oam.next() {
                 slot.set(&bat_object);
             }
 
-            game.update();
+            writer.commit(oam);
+
+            game.update(&mut sprite_loader);
 
             level_bg.commit(&mut vram);
             level_bg.show();
 
-            // managed
-            //bat_sprite.set_position((40,40).into());
-            //bat_sprite.show();
+            game.render(&mut sprite_loader, oam);
 
-            //managed.commit();
         }
-        //game.clear(&mut vram);
     }
 }

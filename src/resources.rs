@@ -1,7 +1,11 @@
+use agb::display::Font;
+use agb::include_font;
 use agb::{
     display::object::Graphics,
     include_aseprite,
 };
+
+pub const FONT: Font = include_font!("fonts/yoster.ttf", 12);
 
 const SPRITES: &Graphics = include_aseprite!(
     "gfx/whitch_design.aseprite",

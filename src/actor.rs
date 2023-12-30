@@ -1,25 +1,23 @@
-use agb::display::object::SpriteLoader;
-use agb::display::object::OamIterator;
 use crate::behaviors::Behavior;
-use agb::{
-    display::object::Object,
-    fixnum::{FixedNum, Rect, Vector2D},
-};
+use agb::display::object::OamIterator;
+use agb::display::object::SpriteLoader;
+use agb::display::object::Tag;
+use agb::fixnum::{FixedNum, Rect, Vector2D};
 use generational_arena::Arena;
 
 pub struct Actor<'a> {
-    sprite: Object<'a>,
-    position: Vector2D<FixedNum<8>>,
-    velocity: Vector2D<FixedNum<8>>,
-    collision_mask: Rect<FixedNum<8>>,
-    visible: bool,
-    behaviors: Arena<Behavior>,
+    pub tag: &'a Tag,
+    pub position: Vector2D<FixedNum<8>>,
+    pub velocity: Vector2D<FixedNum<8>>,
+    pub collision_mask: Rect<FixedNum<8>>,
+    pub visible: bool,
+    pub behaviors: Arena<Behavior>,
 }
 
 impl<'a> Actor<'a> {
-    pub fn new(sprite: Object<'a>, collision_mask: Rect<FixedNum<8>>) -> Self {
+    pub fn new(tag: &'a Tag, collision_mask: Rect<FixedNum<8>>) -> Self {
         Self {
-            sprite,
+            tag,
             position: (0, 0).into(),
             velocity: (0, 0).into(),
             collision_mask,

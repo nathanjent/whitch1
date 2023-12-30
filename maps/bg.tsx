@@ -24,5 +24,19 @@
    <wangtile tileid="101" wangid="0,0,0,0,0,0,0,1"/>
    <wangtile tileid="102" wangid="0,1,0,0,0,0,0,0"/>
   </wangset>
+  <wangset name="wall" type="edge" tile="-1">
+   <wangcolor name="brick" color="#ff0000" tile="-1" probability="1"/>
+   <wangcolor name="black" color="#00ff00" tile="-1" probability="1"/>
+   <wangtile tileid="0" wangid="2,0,2,0,2,0,2,0"/>
+   <wangtile tileid="1" wangid="2,0,1,0,1,0,2,0"/>
+   <wangtile tileid="2" wangid="2,0,1,0,1,0,1,0"/>
+   <wangtile tileid="3" wangid="2,0,2,0,1,0,1,0"/>
+   <wangtile tileid="33" wangid="1,0,1,0,1,0,2,0"/>
+   <wangtile tileid="34" wangid="1,0,1,0,1,0,1,0"/>
+   <wangtile tileid="35" wangid="1,0,1,0,1,0,1,0"/>
+   <wangtile tileid="65" wangid="1,0,1,0,2,0,2,0"/>
+   <wangtile tileid="66" wangid="1,0,1,0,2,0,1,0"/>
+   <wangtile tileid="67" wangid="1,0,2,0,2,0,1,0"/>
+  </wangset>
  </wangsets>
 </tileset>
