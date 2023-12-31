@@ -1,10 +1,9 @@
+use crate::behaviors::Behavior;
 use crate::level::Entity;
-use crate::resources;
 use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::SpriteLoader;
 use agb::fixnum::Rect;
-use agb::fixnum::Vector2D;
 use agb::input::ButtonController;
 use alloc::vec::Vec;
 use generational_arena::Arena;
@@ -36,27 +35,18 @@ impl<'a> Game<'a> {
     //    self.level.clear(vram);
     //}
 
-    pub fn load_level(&mut self, sprite_loader: &mut SpriteLoader) {
-        for EntityWithPosition(entity, Vector2D { x, y }) in self.level.starting_positions {
+    pub fn load_level(&mut self) {
+        for EntityWithPosition(entity, position) in self.level.starting_positions {
+            let position = *position + entity.map_entity_offset();
+            let collision_mask = Rect::new(position.into(), (16, 16).into());
             let actor = match entity {
                 Entity::Player => {
-                    let collision_mask = Rect::new((*x, *y).into(), (16, 16).into());
-                    let sprite = sprite_loader.get_vram_sprite(resources::W_IDLE.sprite(0));
-                    let obj = ObjectUnmanaged::new(sprite);
-                    Actor::new(obj, entity.tag(), collision_mask, (*x, *y).into())
+                    let mut actor = Actor::new(entity.tag(), collision_mask, position.into());
+                    actor.behaviors.insert(Behavior::Input);
+                    actor
                 }
-                Entity::Bat => {
-                    let collision_mask = Rect::new((*x, *y).into(), (16, 16).into());
-                    let sprite = sprite_loader.get_vram_sprite(resources::BAT.sprite(0));
-                    let obj = ObjectUnmanaged::new(sprite);
-                    Actor::new(obj, entity.tag(), collision_mask, (*x, *y).into())
-                }
-                Entity::Door => {
-                    let collision_mask = Rect::new((*x, *y).into(), (16, 16).into());
-                    let sprite = sprite_loader.get_vram_sprite(resources::DOOR.sprite(0));
-                    let obj = ObjectUnmanaged::new(sprite);
-                    Actor::new(obj, entity.tag(), collision_mask, (*x, *y).into())
-                }
+                Entity::Bat => Actor::new(entity.tag(), collision_mask, position.into()),
+                Entity::Door => Actor::new(entity.tag(), collision_mask, position.into()),
             };
 
             self.actors.insert(actor);
@@ -64,11 +54,11 @@ impl<'a> Game<'a> {
     }
 
     pub fn update(&mut self, sprite_loader: &mut SpriteLoader) {
+        self.input.update();
         self.frame = self.frame.wrapping_add(1);
         for (_, actor) in self.actors.iter_mut() {
-            actor.update();
+            actor.update(&mut self.input);
         }
-        self.input.update();
 
         self.cache_render(sprite_loader);
     }

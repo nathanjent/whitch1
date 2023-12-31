@@ -26,13 +26,14 @@ impl Entity {
     }
 
     pub fn map_entity_offset(&self) -> Vector2D<i32> {
-        const STANDARD: Vector2D<i32> = Vector2D::new(0, -3);
+        const LARGE: Vector2D<i32> = Vector2D::new(0, -32);
+        const STANDARD: Vector2D<i32> = Vector2D::new(0, -16);
         const ZERO: Vector2D<i32> = Vector2D::new(0, 0);
 
         match self {
-            Entity::Player => STANDARD,
-            Entity::Bat => STANDARD,
-            Entity::Door => ZERO,
+            Entity::Player => LARGE,
+            Entity::Bat => ZERO,
+            Entity::Door => STANDARD,
         }
     }
 }

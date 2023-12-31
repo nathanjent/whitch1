@@ -32,7 +32,7 @@
   <object id="1" name="BAT" x="232.545" y="25.0909">
    <point/>
   </object>
-  <object id="2" name="PLAYER" x="26.6364" y="71.6818">
+  <object id="2" name="PLAYER" x="15.1364" y="72.5568">
    <point/>
   </object>
   <object id="3" name="BAT" x="64.7273" y="11.0909">
@@ -44,7 +44,7 @@
   <object id="5" name="BAT" x="193.636" y="33.8182">
    <point/>
   </object>
-  <object id="13" name="DOOR" x="210.5" y="87">
+  <object id="13" name="DOOR" x="204" y="89">
    <point/>
   </object>
  </objectgroup>

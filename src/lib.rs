@@ -46,8 +46,6 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
     let (tiled, mut vram) = gba.display.video.tiled0();
 
-    let mut input = agb::input::ButtonController::new();
-
     backgrounds::load_palettes(&mut vram);
 
     let mut palette = [0x0; 16];
@@ -70,38 +68,16 @@ pub fn entry(mut gba: agb::Gba) -> ! {
         let level = Level::get_level(current_level);
 
         let mut game = Game::new(level);
-        game.load_level(&mut sprite_loader);
-
-        let bat_sprite = sprite_loader.get_vram_sprite(resources::BAT.sprite(0));
-        let mut bat_object = ObjectUnmanaged::new(bat_sprite);
-
-        let mut position: Vector2D<i32> = (30, 30).into();
+        game.load_level();
 
         loop {
             writer.next_letter_group();
             writer.update((0, 0).into());
             sfx.frame();
             vblank.wait_for_vblank();
-            input.update();
 
-            match input.x_tri() {
-                agb::input::Tri::Positive => position.x += 1,
-                agb::input::Tri::Negative => position.x -= 1,
-                agb::input::Tri::Zero => (),
-            }
-
-            match input.y_tri() {
-                agb::input::Tri::Positive => position.y += 1,
-                agb::input::Tri::Negative => position.y -= 1,
-                agb::input::Tri::Zero => (),
-            }
 
             let oam = &mut unmanaged.iter();
-            bat_object.show().set_position(position);
-            if let Some(slot) = oam.next() {
-                slot.set(&bat_object);
-            }
-
 
             game.update(&mut sprite_loader);
 
