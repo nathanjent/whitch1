@@ -4,15 +4,13 @@
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![cfg_attr(test, test_runner(agb::test_runner::test_runner))]
 
-use agb::display::WIDTH;
+use agb::display::object::ObjectTextRender;
 use agb::display::object::PaletteVram;
 use agb::display::object::Size;
-use agb::display::object::ObjectTextRender;
-use agb::display::object::ObjectUnmanaged;
 use agb::display::object::TextAlignment;
 use agb::display::palette16::Palette16;
 use agb::display::tiled::TiledMap;
-use agb::fixnum::Vector2D;
+use agb::display::WIDTH;
 
 use core::fmt::Write;
 
@@ -33,7 +31,6 @@ use agb::interrupt::VBlank;
 use agb::sound::mixer::Frequency;
 use game::Game;
 use level::Level;
-
 
 pub fn entry(mut gba: agb::Gba) -> ! {
     let vblank = VBlank::get();
@@ -75,7 +72,6 @@ pub fn entry(mut gba: agb::Gba) -> ! {
             writer.update((0, 0).into());
             sfx.frame();
             vblank.wait_for_vblank();
-
 
             let oam = &mut unmanaged.iter();
 

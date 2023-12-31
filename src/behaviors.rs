@@ -3,8 +3,10 @@ use agb::{
     input::ButtonController,
 };
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum Behavior {
     Input,
+    Gravity,
 }
 
 impl Behavior {
@@ -28,6 +30,7 @@ impl Behavior {
                     agb::input::Tri::Zero => (),
                 }
             }
+            Self::Gravity => {}
         }
     }
 }

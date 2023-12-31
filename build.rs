@@ -1,10 +1,11 @@
 use proc_macro2::TokenStream;
-use quote::{quote, TokenStreamExt};
+use quote::{quote, ToTokens, TokenStreamExt};
 use std::env;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::str::FromStr;
 use tiled::ObjectLayer;
+use tiled::PropertyValue;
 
 const LEVEL_NAMES: &[&str] = &["level1"];
 
@@ -46,7 +47,7 @@ fn main() {
     }
 }
 
-fn load_level(loader: &mut tiled::Loader, filename: &str) -> (TokenStream, Level) {
+fn load_level<'a>(loader: &'a mut tiled::Loader, filename: &'a str) -> (TokenStream, Level) {
     let level_map = load_tmx(loader, filename);
     let tiles = export_tiles(&level_map, quote!(level));
     let data = export_level(&level_map);
@@ -85,14 +86,44 @@ impl quote::ToTokens for MapEntity {
         use MapEntity::*;
 
         tokens.append_all(match self {
-            Bat => quote!(Entity::Bat),
-            Player => quote!(Entity::Player),
-            Door => quote!(Entity::Door),
+            Bat => quote!(EntityType::Bat),
+            Player => quote!(EntityType::Player),
+            Door => quote!(EntityType::Door),
         })
     }
 }
 
-struct EntityWithPosition(MapEntity, (i32, i32));
+impl quote::ToTokens for Behavior {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        use Behavior::*;
+
+        tokens.append_all(match self {
+            Input => quote!(Behavior::Input),
+            Gravity => quote!(Behavior::Gravity),
+        })
+    }
+}
+
+enum Behavior {
+    Input,
+    Gravity,
+}
+
+impl FromStr for Behavior {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use Behavior::*;
+
+        Ok(match s {
+            "Input" => Input,
+            "Gravity" => Gravity,
+            _ => return Err(()),
+        })
+    }
+}
+
+struct EntityWithPosition(MapEntity, (i32, i32), Vec<Behavior>);
 struct CollisionRect((i32, i32), (i32, i32));
 
 impl quote::ToTokens for EntityWithPosition {
@@ -101,8 +132,9 @@ impl quote::ToTokens for EntityWithPosition {
         let pos_y = self.1 .1;
         let location = quote!(Vector2D::new(#pos_x, #pos_y));
         let item = &self.0;
+        let behaviors = &self.2;
 
-        tokens.append_all(quote!(EntityWithPosition(#item, #location)))
+        tokens.append_all(quote!(Entity(#item, #location, &[#(#behaviors),*])))
     }
 }
 
@@ -120,14 +152,18 @@ impl quote::ToTokens for CollisionRect {
     }
 }
 
-impl quote::ToTokens for Level {
+impl<'a> quote::ToTokens for Level {
     fn to_tokens(&self, tokens: &mut TokenStream) {
+        let width = &self.width;
+        let height = &self.height;
         let starting_positions = &self.starting_positions;
         let name = &self.name;
         let collision_rects = &self.collision_rects;
 
         tokens.append_all(quote! {
             Level::new(
+                #width,
+                #height,
                 &[#(#starting_positions),*],
                 #name,
                 &[#(#collision_rects),*],
@@ -176,6 +212,8 @@ fn export_tiles(map: &tiled::Map, background: TokenStream) -> TokenStream {
 }
 
 struct Level {
+    width: u32,
+    height: u32,
     starting_positions: Vec<EntityWithPosition>,
     name: String,
     collision_rects: Vec<CollisionRect>,
@@ -218,6 +256,8 @@ fn export_level(map: &tiled::Map) -> Level {
     };
 
     Level {
+        width: map.width,
+        height: map.height,
         starting_positions,
         name: level_name.clone(),
         collision_rects,
@@ -236,7 +276,19 @@ fn extract_objects_from_layer(objects: ObjectLayer<'_>) -> impl Iterator<Item = 
                 .parse()
                 .unwrap_or_else(|_| panic!("unknown object type {}", obj.name));
 
-            Shape::Point(EntityWithPosition(entity, (x as i32, y as i32)))
+            let behaviors: Vec<Behavior> = match obj.properties.get("behaviors") {
+                Some(behaviors) => match behaviors {
+                    PropertyValue::StringValue(text) => text
+                        .split("\n")
+                        .map(Behavior::from_str)
+                        .filter_map(Result::ok)
+                        .collect(),
+                    _ => panic!("behaviors should be a string value"),
+                },
+                None => Vec::new(),
+            };
+
+            Shape::Point(EntityWithPosition(entity, (x as i32, y as i32), behaviors))
         }
         _ => panic!("unsupported object shape"),
     })

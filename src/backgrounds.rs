@@ -1,5 +1,5 @@
 use agb::display::tiled::RegularMap;
-use agb::{include_background_gfx, println};
+use agb::include_background_gfx;
 use agb::display::tiled::VRamManager;
 
 include_background_gfx!(backgrounds, "1e151b",
@@ -20,8 +20,7 @@ pub fn load_level_background(
     vram_manager: &mut VRamManager,
     level_number: usize,
 ) {
-    let level_map = &tilemaps::LEVELS_MAP[level_number];
-
+    let level_map = tilemaps::LEVELS_MAP[level_number];
     let level_tileset = backgrounds::level.tiles;
 
     for y in 0..32u16 {

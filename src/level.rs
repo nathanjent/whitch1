@@ -1,47 +1,49 @@
-use crate::resources;
+use crate::{resources, behaviors::Behavior};
 use agb::{display::object::Tag, fixnum::{Vector2D, Rect}};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-pub enum Entity {
+pub enum EntityType {
     Player,
     Bat,
     Door,
 }
 
-impl Entity {
+impl EntityType {
     pub fn shadow_tag(&self) -> &'static Tag {
         match self {
-            Entity::Player => resources::W_IDLE,
-            Entity::Bat => resources::BAT,
-            Entity::Door => resources::DOOR,
+            EntityType::Player => resources::W_IDLE,
+            EntityType::Bat => resources::BAT,
+            EntityType::Door => resources::DOOR,
         }
     }
 
     pub fn tag(&self) -> &'static Tag {
         match self {
-            Entity::Player => resources::W_IDLE,
-            Entity::Bat => resources::BAT,
-            Entity::Door => resources::DOOR,
+            EntityType::Player => resources::W_IDLE,
+            EntityType::Bat => resources::BAT,
+            EntityType::Door => resources::DOOR,
         }
     }
 
     pub fn map_entity_offset(&self) -> Vector2D<i32> {
-        const LARGE: Vector2D<i32> = Vector2D::new(0, -32);
-        const STANDARD: Vector2D<i32> = Vector2D::new(0, -16);
+        const LARGE: Vector2D<i32> = Vector2D::new(-16, -16);
+        const STANDARD: Vector2D<i32> = Vector2D::new(-8, -8);
         const ZERO: Vector2D<i32> = Vector2D::new(0, 0);
 
         match self {
-            Entity::Player => LARGE,
-            Entity::Bat => ZERO,
-            Entity::Door => STANDARD,
+            EntityType::Player => LARGE,
+            EntityType::Bat => ZERO,
+            EntityType::Door => STANDARD,
         }
     }
 }
 
-pub struct EntityWithPosition(pub Entity, pub Vector2D<i32>);
+pub struct Entity(pub EntityType, pub Vector2D<i32>, pub &'static [Behavior]);
 
 pub struct Level {
-    pub starting_positions: &'static [EntityWithPosition],
+    pub width: u32,
+    pub height: u32,
+    pub starting_positions: &'static [Entity],
     pub name: &'static str,
     pub collision_rects: &'static [Rect<i32>],
 }
@@ -49,11 +51,15 @@ pub struct Level {
 impl Level {
     #[allow(unused_variables)]
     const fn new(
-        starting_positions: &'static [EntityWithPosition],
+        width: u32,
+        height: u32,
+        starting_positions: &'static [Entity],
         name: &'static str,
         collision_rects: &'static [Rect<i32>],
     ) -> Self {
         Self {
+            width,
+            height,
             starting_positions,
             name,
             collision_rects,
@@ -71,8 +77,9 @@ impl Level {
 
 mod levels {
     use agb::fixnum::{Vector2D, Rect};
-    use crate::Level;
-    use crate::level::{EntityWithPosition, Entity};
+    use crate::level::Level;
+    use crate::behaviors::Behavior;
+    use crate::level::{Entity, EntityType};
 
     include!(concat!(env!("OUT_DIR"), "/levels.rs"));
 }

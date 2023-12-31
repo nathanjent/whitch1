@@ -1,5 +1,5 @@
 use crate::behaviors::Behavior;
-use crate::level::Entity;
+use crate::level::EntityType;
 use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::SpriteLoader;
@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 use generational_arena::Arena;
 
 use crate::actor::Actor;
-use crate::level::EntityWithPosition;
+use crate::level::Entity;
 use crate::level::Level;
 
 pub struct Game<'a> {
@@ -36,17 +36,17 @@ impl<'a> Game<'a> {
     //}
 
     pub fn load_level(&mut self) {
-        for EntityWithPosition(entity, position) in self.level.starting_positions {
+        for Entity(entity, position, behaviors) in self.level.starting_positions {
             let position = *position + entity.map_entity_offset();
             let collision_mask = Rect::new(position.into(), (16, 16).into());
             let actor = match entity {
-                Entity::Player => {
+                EntityType::Player => {
                     let mut actor = Actor::new(entity.tag(), collision_mask, position.into());
-                    actor.behaviors.insert(Behavior::Input);
+                    actor.behaviors.extend(behaviors.into_iter().map(|b| *b));
                     actor
                 }
-                Entity::Bat => Actor::new(entity.tag(), collision_mask, position.into()),
-                Entity::Door => Actor::new(entity.tag(), collision_mask, position.into()),
+                EntityType::Bat => Actor::new(entity.tag(), collision_mask, position.into()),
+                EntityType::Door => Actor::new(entity.tag(), collision_mask, position.into()),
             };
 
             self.actors.insert(actor);
