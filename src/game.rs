@@ -36,9 +36,9 @@ impl<'a> Game<'a> {
     //}
 
     pub fn load_level(&mut self) {
-        for Entity(entity, position, behaviors) in self.level.starting_positions {
+        for Entity(entity, position, maybe_size, behaviors) in self.level.starting_positions {
             let position = *position + entity.map_entity_offset();
-            let collision_mask = Rect::new(position.into(), (16, 16).into());
+            let collision_mask = maybe_size.map(|size| Rect::new(position.into(), size.into()));
             let actor = match entity {
                 EntityType::Player => {
                     let mut actor = Actor::new(entity.tag(), collision_mask, position.into());

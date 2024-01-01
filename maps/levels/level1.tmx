@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="5" nextobjectid="27">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="6" nextobjectid="29">
  <properties>
   <property name="NAME" value="Level 1 - Let's Go!"/>
  </properties>
@@ -15,28 +15,21 @@
   </data>
  </layer>
  <objectgroup id="4" name="collision">
-  <object id="14" x="0" y="75" width="69" height="17"/>
-  <object id="20" x="69" y="82" width="88" height="18"/>
-  <object id="15" x="154.739" y="91.25" width="34.2618" height="13"/>
-  <object id="16" x="203.076" y="90.9348" width="32.8913" height="24.8152"/>
-  <object id="17" x="189.163" y="98.25" width="13.8261" height="16.5"/>
-  <object id="18" x="234.87" y="75" width="10.0978" height="17.25"/>
-  <object id="23" x="114.75" y="67.0652" width="10.75" height="7.86957"/>
-  <object id="22" x="75" y="67" width="17.8587" height="17.3043"/>
-  <object id="24" x="107.25" y="74.1087" width="25.6673" height="9.8913"/>
-  <object id="19" x="244.967" y="81.9891" width="11.3967" height="11.7609"/>
-  <object id="25" x="-10.25" y="0.875" width="10.625" height="85.125"/>
-  <object id="26" x="255.875" y="0.25" width="18" height="94.75"/>
+  <object id="14" type="COLLISION" x="0" y="75" width="69" height="17"/>
+  <object id="20" type="COLLISION" x="69" y="82" width="88" height="18"/>
+  <object id="15" type="COLLISION" x="154.739" y="91.25" width="34.2618" height="13"/>
+  <object id="16" type="COLLISION" x="203.076" y="90.9348" width="32.8913" height="24.8152"/>
+  <object id="17" type="COLLISION" x="189.163" y="98.25" width="13.8261" height="16.5"/>
+  <object id="18" type="COLLISION" x="234.87" y="75" width="10.0978" height="17.25"/>
+  <object id="23" type="COLLISION" x="114.75" y="67.0652" width="10.75" height="7.86957"/>
+  <object id="22" type="COLLISION" x="75" y="67" width="17.8587" height="17.3043"/>
+  <object id="24" type="COLLISION" x="107.25" y="74.1087" width="25.6673" height="9.8913"/>
+  <object id="19" type="COLLISION" x="244.967" y="81.9891" width="11.3967" height="11.7609"/>
+  <object id="25" type="COLLISION" x="-10.25" y="0.875" width="10.625" height="85.125"/>
+  <object id="26" type="COLLISION" x="255.875" y="0.25" width="18" height="94.75"/>
  </objectgroup>
  <objectgroup id="2" name="entities" class="Bat Spawns">
   <object id="1" name="BAT" x="232.545" y="25.0909">
-   <point/>
-  </object>
-  <object id="2" name="PLAYER" x="24.1364" y="59.5568">
-   <properties>
-    <property name="behaviors">Input
-Gravity</property>
-   </properties>
    <point/>
   </object>
   <object id="3" name="BAT" x="64.7273" y="11.0909">
@@ -48,8 +41,14 @@ Gravity</property>
   <object id="5" name="BAT" x="193.636" y="33.8182">
    <point/>
   </object>
-  <object id="13" name="DOOR" x="210.125" y="81.75">
+  <object id="13" name="DOOR" type="COLLISION" x="210.125" y="81.75">
    <point/>
+  </object>
+  <object id="28" name="PLAYER" type="ENTITY" x="20.5" y="42.25" width="32" height="32">
+   <properties>
+    <property name="behaviors">Input
+Gravity</property>
+   </properties>
   </object>
  </objectgroup>
 </map>

@@ -38,7 +38,7 @@ impl EntityType {
     }
 }
 
-pub struct Entity(pub EntityType, pub Vector2D<i32>, pub &'static [Behavior]);
+pub struct Entity(pub EntityType, pub Vector2D<i32>, pub Option<Vector2D<i32>>, pub &'static [Behavior]);
 
 pub struct Level {
     pub width: u32,

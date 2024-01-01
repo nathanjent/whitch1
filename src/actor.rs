@@ -11,7 +11,7 @@ pub struct Actor<'a> {
     pub tag: &'a Tag,
     pub position: Vector2D<FixedNum<8>>,
     pub velocity: Vector2D<FixedNum<8>>,
-    pub collision_mask: Rect<FixedNum<8>>,
+    pub collision_mask: Option<Rect<FixedNum<8>>>,
     pub visible: bool,
     pub behaviors: Arena<Behavior>,
     frame: usize,
@@ -20,7 +20,7 @@ pub struct Actor<'a> {
 impl<'a> Actor<'a> {
     pub fn new(
         tag: &'a Tag,
-        collision_mask: Rect<FixedNum<8>>,
+        collision_mask: Option<Rect<FixedNum<8>>>,
         position: Vector2D<FixedNum<8>>,
     ) -> Self {
         Self {
