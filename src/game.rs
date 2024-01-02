@@ -13,9 +13,10 @@ use crate::level::Entity;
 use crate::level::Level;
 
 pub struct Game<'a> {
-    input: ButtonController,
     level: &'a Level,
-    pub actors: Arena<Actor<'a>>,
+    input: ButtonController,
+    actors: Arena<Actor<'a>>,
+    behaviors: Arena<Arena<Behavior>>,
     frame: usize,
     render_cache: Vec<RenderCache>,
 }
@@ -23,9 +24,10 @@ pub struct Game<'a> {
 impl<'a> Game<'a> {
     pub fn new(level: &'a Level) -> Self {
         Self {
-            input: ButtonController::new(),
             level,
+            input: ButtonController::new(),
             actors: Arena::with_capacity(100),
+            behaviors: Arena::with_capacity(100),
             frame: 0,
             render_cache: Vec::with_capacity(100),
         }
@@ -37,27 +39,33 @@ impl<'a> Game<'a> {
 
     pub fn load_level(&mut self) {
         for Entity(entity, position, maybe_size, behaviors) in self.level.starting_positions {
-            let position = *position + entity.map_entity_offset();
+            let position = *position;
             let collision_mask = maybe_size.map(|size| Rect::new(position.into(), size.into()));
             let actor = match entity {
-                EntityType::Player => {
-                    let mut actor = Actor::new(entity.tag(), collision_mask, position.into());
-                    actor.behaviors.extend(behaviors.into_iter().map(|b| *b));
-                    actor
+                EntityType::Player | EntityType::Bat => {
+                    Actor::new(entity.tag(), collision_mask, position.into(), None, None)
                 }
-                EntityType::Bat => Actor::new(entity.tag(), collision_mask, position.into()),
-                EntityType::Door => Actor::new(entity.tag(), collision_mask, position.into()),
+                EntityType::Door => {
+                    Actor::new(entity.tag(), collision_mask, position.into(), None, None)
+                }
             };
 
             self.actors.insert(actor);
+            self.behaviors
+                .insert(behaviors.iter().map(|b| *b).collect());
         }
     }
 
     pub fn update(&mut self, sprite_loader: &mut SpriteLoader) {
         self.input.update();
         self.frame = self.frame.wrapping_add(1);
-        for (_, actor) in self.actors.iter_mut() {
-            actor.update(&mut self.input);
+
+        for (idx, actor) in self.actors.iter_mut() {
+            if let Some(behaviors) = self.behaviors.get(idx) {
+                for (_, behavior) in behaviors.iter() {
+                    behavior.update(actor, &self.input, self.level.collision_rects);
+                }
+            }
         }
 
         self.cache_render(sprite_loader);
@@ -83,7 +91,7 @@ impl<'a> Game<'a> {
             item.render(oam);
         }
 
-        for (i, actor) in self.actors.iter_mut() {
+        for (_, actor) in self.actors.iter_mut() {
             actor.render(loader, oam);
         }
     }

@@ -23,6 +23,7 @@ mod game;
 mod level;
 mod resources;
 mod sfx;
+mod util;
 
 use agb::display::tiled::RegularBackgroundSize;
 use agb::display::tiled::TileFormat;

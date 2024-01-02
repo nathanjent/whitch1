@@ -1,7 +1,5 @@
-use agb::{
-    fixnum::{FixedNum, Vector2D},
-    input::ButtonController,
-};
+use crate::{actor::Actor, util};
+use agb::{ input::ButtonController, fixnum::{num, Rect}};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum Behavior {
@@ -12,23 +10,23 @@ pub enum Behavior {
 impl Behavior {
     pub fn update(
         &self,
-        position: &mut Vector2D<FixedNum<8>>,
-        velocity: &mut Vector2D<FixedNum<8>>,
+        actor: &mut Actor,
         input: &ButtonController,
+        collision_rects: &[Rect<i32>],
     ) {
         match self {
             Self::Input => {
                 match input.x_tri() {
-                    agb::input::Tri::Positive => position.x += 1,
-                    agb::input::Tri::Negative => position.x -= 1,
-                    agb::input::Tri::Zero => (),
+                    agb::input::Tri::Positive => if actor.velocity.x < actor.max_velocity.x {
+                        actor.velocity.x += actor.acceleration.x;
+                    },
+                    agb::input::Tri::Negative => if actor.velocity.x > -actor.max_velocity.x {
+                        actor.velocity.x -= actor.acceleration.x;
+                    },
+                    agb::input::Tri::Zero => actor.velocity.x = util::lerp(0.into(), actor.velocity.x, num!(0.05)),
                 }
 
-                match input.y_tri() {
-                    agb::input::Tri::Positive => position.y += 1,
-                    agb::input::Tri::Negative => position.y -= 1,
-                    agb::input::Tri::Zero => (),
-                }
+                actor.position += actor.velocity;
             }
             Self::Gravity => {}
         }
