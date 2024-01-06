@@ -1,5 +1,5 @@
 use crate::{resources, behaviors::Behavior};
-use agb::{display::object::Tag, fixnum::{Vector2D, Rect}};
+use agb::{display::object::Tag, fixnum::{Vector2D, Rect, FixedNum}};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum EntityType {

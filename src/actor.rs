@@ -46,4 +46,10 @@ impl<'a> Actor<'a> {
             slot.set(&obj);
         }
     }
+
+    pub fn will_collide(&self, collision_rect: Rect<FixedNum<8>>) -> bool {
+        self.collision_mask
+            .map(|collision_mask| collision_rect.touches(collision_mask))
+            .unwrap_or(false)
+    }
 }

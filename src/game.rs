@@ -3,7 +3,7 @@ use crate::level::EntityType;
 use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::SpriteLoader;
-use agb::fixnum::Rect;
+use agb::fixnum::{num, Rect};
 use agb::input::ButtonController;
 use alloc::vec::Vec;
 use generational_arena::Arena;
@@ -42,9 +42,13 @@ impl<'a> Game<'a> {
             let position = *position;
             let collision_mask = maybe_size.map(|size| Rect::new(position.into(), size.into()));
             let actor = match entity {
-                EntityType::Player | EntityType::Bat => {
-                    Actor::new(entity.tag(), collision_mask, position.into(), None, None)
-                }
+                EntityType::Player | EntityType::Bat => Actor::new(
+                    entity.tag(),
+                    collision_mask,
+                    position.into(),
+                    Some((num!(1.0), num!(3.0)).into()),
+                    Some((num!(0.2), num!(0.8)).into()),
+                ),
                 EntityType::Door => {
                     Actor::new(entity.tag(), collision_mask, position.into(), None, None)
                 }
@@ -66,6 +70,7 @@ impl<'a> Game<'a> {
                     behavior.update(actor, &self.input, self.level.collision_rects);
                 }
             }
+            actor.position += actor.velocity;
         }
 
         self.cache_render(sprite_loader);

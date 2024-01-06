@@ -99,6 +99,7 @@ impl quote::ToTokens for Behavior {
         tokens.append_all(match self {
             Input => quote!(Behavior::Input),
             Gravity => quote!(Behavior::Gravity),
+            Collider => quote!(Behavior::Collider),
         })
     }
 }
@@ -106,6 +107,7 @@ impl quote::ToTokens for Behavior {
 enum Behavior {
     Input,
     Gravity,
+    Collider,
 }
 
 impl FromStr for Behavior {
@@ -117,6 +119,7 @@ impl FromStr for Behavior {
         Ok(match s {
             "Input" => Input,
             "Gravity" => Gravity,
+            "Collider" => Collider,
             _ => return Err(()),
         })
     }

@@ -1,4 +1,3 @@
-use agb::fixnum::num;
 use agb::rng;
 use agb::sound::mixer::{ChannelId, Mixer, SoundChannel};
 
