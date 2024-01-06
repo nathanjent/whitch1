@@ -45,12 +45,11 @@ impl<'a> Game<'a> {
                 EntityType::Player | EntityType::Bat => Actor::new(
                     entity.tag(),
                     collision_mask,
-                    position.into(),
                     Some((num!(1.0), num!(3.0)).into()),
                     Some((num!(0.2), num!(0.8)).into()),
                 ),
                 EntityType::Door => {
-                    Actor::new(entity.tag(), collision_mask, position.into(), None, None)
+                    Actor::new(entity.tag(), collision_mask, None, None)
                 }
             };
 
@@ -70,7 +69,7 @@ impl<'a> Game<'a> {
                     behavior.update(actor, &self.input, self.level.collision_rects);
                 }
             }
-            actor.position += actor.velocity;
+            actor.collision_mask.position += actor.velocity;
         }
 
         self.cache_render(sprite_loader);

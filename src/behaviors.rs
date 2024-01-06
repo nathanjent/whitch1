@@ -37,9 +37,9 @@ impl Behavior {
                 }
 
                 if input.is_pressed(Button::B) {
+                    // jump
                     actor.velocity.y += actor.acceleration.y;
                 }
-
             }
             Self::Gravity => {
                 if actor.velocity.y < actor.max_velocity.y {
@@ -50,12 +50,15 @@ impl Behavior {
                 if collision_rects.iter().any(|Rect { position, size }| {
                     let position = *position;
                     let size = *size;
-                    actor.will_collide(Rect {
-                        position: position.into(),
-                        size: size.into(),
-                    })
+                    actor.hit_bottom(
+                        Rect {
+                            position: position.into(),
+                            size: size.into(),
+                        },
+                        1.into(),
+                    )
                 }) {
-                    actor.velocity = (0, 0).into();
+                    actor.velocity.y = 0.into();
                 }
             }
         }
