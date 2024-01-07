@@ -6,6 +6,12 @@ use agb::fixnum::{num, FixedNum, Rect, Vector2D};
 
 type Fixed8 = FixedNum<8>;
 
+#[derive(PartialEq, Eq)]
+enum Direction {
+    Left,
+    Right,
+}
+
 pub struct Actor<'a> {
     pub tag: &'a Tag,
     pub velocity: Vector2D<Fixed8>,
@@ -13,6 +19,7 @@ pub struct Actor<'a> {
     pub max_velocity: Vector2D<Fixed8>,
     pub collision_mask: Rect<Fixed8>,
     pub visible: bool,
+    pub direction: Direction,
     frame: usize,
 }
 
@@ -33,11 +40,12 @@ impl<'a> Actor<'a> {
                 size: (1, 1).into(),
             }),
             visible: true,
+            direction: Direction::Right,
             frame: 0,
         }
     }
 
-    pub fn render(&mut self, loader: &mut SpriteLoader, oam: &mut OamIterator) {
+    pub fn render(&self, loader: &mut SpriteLoader, oam: &mut OamIterator) {
         let sprite = loader.get_vram_sprite(self.tag.animation_sprite(self.frame / 16));
         let mut obj = ObjectUnmanaged::new(sprite);
         obj.show().set_position(Vector2D {
@@ -66,6 +74,23 @@ impl<'a> Actor<'a> {
                 return true;
             }
             x += sampling;
+        }
+        false
+    }
+
+    pub fn hit_wall(&self, collision_rect: Rect<FixedNum<8>>, sampling: Fixed8) -> bool {
+        let (min_x, min_y, max_x, max_y) = self.aabb();
+        let mut y = min_y;
+        while y < max_y - self.velocity.y {
+            let x = if self.direction == Direction::Left {
+                min_x
+            } else {
+                max_x
+            };
+            if collision_rect.contains_point((x, y.into()).into()) {
+                return true;
+            }
+            y += sampling;
         }
         false
     }

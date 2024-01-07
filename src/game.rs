@@ -1,8 +1,11 @@
 use crate::behaviors::Behavior;
 use crate::level::EntityType;
+use agb::display::object::DynamicSprite;
 use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
+use agb::display::object::PaletteVram;
 use agb::display::object::SpriteLoader;
+use agb::display::palette16::Palette16;
 use agb::fixnum::{num, Rect};
 use agb::input::ButtonController;
 use alloc::vec::Vec;
@@ -48,9 +51,7 @@ impl<'a> Game<'a> {
                     Some((num!(1.0), num!(3.0)).into()),
                     Some((num!(0.2), num!(0.8)).into()),
                 ),
-                EntityType::Door => {
-                    Actor::new(entity.tag(), collision_mask, None, None)
-                }
+                EntityType::Door => Actor::new(entity.tag(), collision_mask, None, None),
             };
 
             self.actors.insert(actor);
@@ -95,7 +96,7 @@ impl<'a> Game<'a> {
             item.render(oam);
         }
 
-        for (_, actor) in self.actors.iter_mut() {
+        for (_, actor) in self.actors.iter() {
             actor.render(loader, oam);
         }
     }
