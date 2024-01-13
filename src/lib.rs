@@ -57,13 +57,13 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
     let current_level = 0;
     loop {
-        let mut level_bg = tiled.background(
+        let mut level_bg1 = tiled.background(
             Priority::P1,
             RegularBackgroundSize::Background32x32,
             TileFormat::FourBpp,
         );
 
-        backgrounds::load_level_background(&mut level_bg, &mut vram, current_level);
+        backgrounds::load_level_background(&mut level_bg1, &mut vram, current_level);
         let level = Level::get_level(current_level);
 
         let mut game = Game::new(level);
@@ -77,10 +77,10 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
             let oam = &mut unmanaged.iter();
 
-            game.update(&mut sprite_loader);
+            game.update(&mut sprite_loader, &mut sfx);
 
-            level_bg.commit(&mut vram);
-            level_bg.show();
+            level_bg1.commit(&mut vram);
+            level_bg1.show();
 
             game.render(&mut sprite_loader, oam);
 

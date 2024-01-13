@@ -1,7 +1,12 @@
-use crate::{actor::Actor, util};
+use crate::{
+    actor::{Actor, ActorState},
+    sfx::Sfx,
+    util,
+};
 use agb::{
     fixnum::{num, Rect},
-    input::{Button, ButtonController}, mgba::Mgba,
+    input::{Button, ButtonController},
+    mgba::Mgba,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
@@ -17,6 +22,7 @@ impl Behavior {
         actor: &mut Actor,
         input: &ButtonController,
         collision_rects: &[Rect<i32>],
+        sfx: &mut Sfx,
     ) {
         let logger = Mgba::new();
         match self {
@@ -37,16 +43,29 @@ impl Behavior {
                     }
                 }
 
-                if actor.velocity.y == 0.into() && input.is_pressed(Button::B) {
-                    if let Some(mut l) = logger {
-                        let _ = l.print(format_args!("jump"), agb::mgba::DebugLevel::Debug);
-                    }
+                if actor.state != ActorState::Jumping
+                    && actor.velocity.y == 0.into()
+                    && input.is_just_pressed(Button::B)
+                {
                     // jump
-                    actor.velocity.y -= actor.acceleration.y;
+                    // v_0 = (2 * h * v_x) / x_h
+                    // g = (-2 * h * v_x^2) / x_h^2
+                    //
+                    // pos += vel * dt + 0.5 * acc * dt * dt
+                    // vel += acc * dt
+                    actor.state = ActorState::Jumping;
+                    actor.velocity.y -= actor.max_velocity.y;
+                    actor.jump_height += 1;
+                    actor.jump_time += 1;
+                    sfx.jump();
+                }
+
+                if actor.velocity == (0, 0).into() {
+                    actor.state = ActorState::Idle;
                 }
             }
             Self::Gravity => {
-                if actor.velocity.y < actor.max_velocity.y {
+                if actor.velocity.y <= actor.max_velocity.y {
                     actor.velocity.y += actor.acceleration.y;
                 }
             }
@@ -59,13 +78,14 @@ impl Behavior {
                             position: position.into(),
                             size: size.into(),
                         },
-                        1.into(),
+                        num!(0.5),
                     )
                 }) {
-                    actor.collision_mask.position.y -= actor.velocity.y;
                     actor.velocity.y = 0.into();
+                    actor.state = ActorState::Idle;
+                    actor.jump_height = 0.into();
+                    actor.jump_time = 0.into();
                 }
-
 
                 if collision_rects.iter().any(|Rect { position, size }| {
                     let position = *position;
@@ -78,10 +98,16 @@ impl Behavior {
                         3.into(),
                     )
                 }) {
-                    actor.collision_mask.position.x -= actor.velocity.x;
                     actor.velocity.x = 0.into();
                 }
             }
+        }
+
+        if let Some(mut l) = logger {
+            let _ = l.print(
+                format_args!("actor_state: {:?}", actor.state),
+                agb::mgba::DebugLevel::Debug,
+            );
         }
     }
 }

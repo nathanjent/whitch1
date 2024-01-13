@@ -4,31 +4,36 @@ use agb::display::object::SpriteLoader;
 use agb::display::object::Tag;
 use agb::fixnum::{num, FixedNum, Rect, Vector2D};
 
-type Fixed8 = FixedNum<8>;
+type Number = FixedNum<8>;
 
-#[derive(PartialEq, Eq)]
-enum Direction {
-    Left,
-    Right,
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub enum ActorState {
+    Idle,
+    Jumping,
+    Falling,
+    Running,
 }
 
 pub struct Actor<'a> {
     pub tag: &'a Tag,
-    pub velocity: Vector2D<Fixed8>,
-    pub acceleration: Vector2D<Fixed8>,
-    pub max_velocity: Vector2D<Fixed8>,
-    pub collision_mask: Rect<Fixed8>,
+    pub velocity: Vector2D<Number>,
+    pub acceleration: Vector2D<Number>,
+    pub max_velocity: Vector2D<Number>,
+    pub collision_mask: Rect<Number>,
     pub visible: bool,
-    pub direction: Direction,
+    pub state: ActorState,
     frame: usize,
+    pub jump_height: Number,
+    pub jump_time: Number,
+    pub jump_distance_to_peak: Number,
 }
 
 impl<'a> Actor<'a> {
     pub fn new(
         tag: &'a Tag,
-        collision_mask: Option<Rect<Fixed8>>,
-        acceleration: Option<Vector2D<Fixed8>>,
-        max_velocity: Option<Vector2D<Fixed8>>,
+        collision_mask: Option<Rect<Number>>,
+        max_velocity: Option<Vector2D<Number>>,
+        acceleration: Option<Vector2D<Number>>,
     ) -> Self {
         Self {
             tag,
@@ -40,8 +45,11 @@ impl<'a> Actor<'a> {
                 size: (1, 1).into(),
             }),
             visible: true,
-            direction: Direction::Right,
+            state: ActorState::Idle,
             frame: 0,
+            jump_height: 0.into(),
+            jump_time: 0.into(),
+            jump_distance_to_peak: 0.into(),
         }
     }
 
@@ -57,8 +65,8 @@ impl<'a> Actor<'a> {
         }
     }
 
-    pub fn aabb(&self) -> (Fixed8, Fixed8, Fixed8, Fixed8) {
-        let Vector2D { x, y } = self.collision_mask.position;
+    pub fn aabb(&self) -> (Number, Number, Number, Number) {
+        let Vector2D { x, y } = self.collision_mask.position + self.velocity;
         let Vector2D {
             x: width,
             y: height,
@@ -66,10 +74,10 @@ impl<'a> Actor<'a> {
         (x, y, x + width, y + height)
     }
 
-    pub fn hit_bottom(&self, collision_rect: Rect<FixedNum<8>>, sampling: Fixed8) -> bool {
+    pub fn hit_bottom(&self, collision_rect: Rect<FixedNum<8>>, sampling: Number) -> bool {
         let (min_x, _, max_x, max_y) = self.aabb();
-        let mut x = min_x;
-        while x <= max_x {
+        let mut x = min_x + sampling;
+        while x <= max_x + sampling {
             if collision_rect.contains_point((x.into(), max_y).into()) {
                 return true;
             }
@@ -78,11 +86,11 @@ impl<'a> Actor<'a> {
         false
     }
 
-    pub fn hit_wall(&self, collision_rect: Rect<FixedNum<8>>, sampling: Fixed8) -> bool {
+    pub fn hit_wall(&self, collision_rect: Rect<FixedNum<8>>, sampling: Number) -> bool {
         let (min_x, min_y, max_x, max_y) = self.aabb();
         let mut y = min_y;
         while y < max_y - self.velocity.y {
-            let x = if self.direction == Direction::Left {
+            let x = if self.velocity.x.to_raw().is_negative() {
                 min_x
             } else {
                 max_x
@@ -93,9 +101,5 @@ impl<'a> Actor<'a> {
             y += sampling;
         }
         false
-    }
-
-    pub fn touches(&self, collision_rect: Rect<FixedNum<8>>) -> bool {
-        collision_rect.touches(self.collision_mask)
     }
 }
