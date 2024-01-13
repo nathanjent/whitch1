@@ -3,6 +3,7 @@ use crate::{
     sfx::Sfx,
     util,
 };
+use agb::input::Tri;
 use agb::{
     fixnum::{num, Rect},
     input::{Button, ButtonController},
@@ -27,20 +28,24 @@ impl Behavior {
         let logger = Mgba::new();
         match self {
             Self::Input => {
+                let vx = actor.velocity.x;
                 match input.x_tri() {
-                    agb::input::Tri::Positive => {
+                    Tri::Positive => {
+                        actor.direction = Tri::Positive;
                         if actor.velocity.x < actor.max_velocity.x {
                             actor.velocity.x += actor.acceleration.x;
                         }
                     }
-                    agb::input::Tri::Negative => {
+                    Tri::Negative => {
+                        actor.direction = Tri::Negative;
                         if actor.velocity.x > -actor.max_velocity.x {
                             actor.velocity.x -= actor.acceleration.x;
                         }
                     }
-                    agb::input::Tri::Zero => {
-                        actor.velocity.x = util::lerp(0.into(), actor.velocity.x, num!(0.05))
-                    }
+                    Tri::Zero => {}
+                }
+                if vx == actor.velocity.x {
+                    actor.velocity.x = util::lerp(0.into(), actor.velocity.x, num!(0.1))
                 }
 
                 if actor.state != ActorState::Jumping
@@ -78,7 +83,7 @@ impl Behavior {
                             position: position.into(),
                             size: size.into(),
                         },
-                        num!(0.5),
+                        num!(0.8),
                     )
                 }) {
                     actor.velocity.y = 0.into();
@@ -103,11 +108,12 @@ impl Behavior {
             }
         }
 
-        if let Some(mut l) = logger {
-            let _ = l.print(
+        logger.and_then(|mut l| {
+            l.print(
                 format_args!("actor_state: {:?}", actor.state),
                 agb::mgba::DebugLevel::Debug,
-            );
-        }
+            )
+            .ok()
+        });
     }
 }

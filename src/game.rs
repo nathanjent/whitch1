@@ -4,7 +4,7 @@ use crate::sfx::Sfx;
 use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::SpriteLoader;
-use agb::fixnum::{num, Rect};
+use agb::fixnum::num;
 use agb::input::ButtonController;
 use alloc::vec::Vec;
 use generational_arena::Arena;
@@ -34,22 +34,23 @@ impl<'a> Game<'a> {
         }
     }
 
-    //fn clear(&mut self, vram: &mut VRamManager) {
-    //    self.level.clear(vram);
-    //}
-
     pub fn load_level(&mut self) {
         for Entity(entity, position, maybe_size, behaviors) in self.level.starting_positions {
             let position = *position;
-            let collision_mask = maybe_size.map(|size| Rect::new(position.into(), size.into()));
+            let maybe_size = *maybe_size;
             let actor = match entity {
                 EntityType::Player | EntityType::Bat => Actor::new(
                     entity.tag(),
-                    collision_mask,
+                    position.into(),
+                    maybe_size.map(|size| size.into()),
                     Some((num!(0.2), num!(8.0)).into()),
                     Some((num!(1.0), num!(1.0)).into()),
                 ),
-                EntityType::Door => Actor::new(entity.tag(), collision_mask, None, None),
+                EntityType::Door => Actor::new(
+                    entity.tag(),
+                    position.into(),
+                    maybe_size.map(|size| size.into()),
+                    None, None),
             };
 
             self.actors.insert(actor);

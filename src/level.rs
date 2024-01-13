@@ -1,5 +1,5 @@
 use crate::{resources, behaviors::Behavior};
-use agb::{display::object::Tag, fixnum::{Vector2D, Rect, FixedNum}};
+use agb::{display::object::Tag, fixnum::{Vector2D, Rect}};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum EntityType {
@@ -9,31 +9,11 @@ pub enum EntityType {
 }
 
 impl EntityType {
-    pub fn shadow_tag(&self) -> &'static Tag {
-        match self {
-            EntityType::Player => resources::W_IDLE,
-            EntityType::Bat => resources::BAT,
-            EntityType::Door => resources::DOOR,
-        }
-    }
-
     pub fn tag(&self) -> &'static Tag {
         match self {
             EntityType::Player => resources::W_IDLE,
             EntityType::Bat => resources::BAT,
             EntityType::Door => resources::DOOR,
-        }
-    }
-
-    pub fn map_entity_offset(&self) -> Vector2D<i32> {
-        const LARGE: Vector2D<i32> = Vector2D::new(-16, -16);
-        const STANDARD: Vector2D<i32> = Vector2D::new(-8, -8);
-        const ZERO: Vector2D<i32> = Vector2D::new(0, 0);
-
-        match self {
-            EntityType::Player => LARGE,
-            EntityType::Bat => ZERO,
-            EntityType::Door => STANDARD,
         }
     }
 }

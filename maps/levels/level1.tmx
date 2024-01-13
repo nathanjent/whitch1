@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="6" nextobjectid="29">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="6" nextobjectid="30">
  <properties>
   <property name="NAME" value="Level 1 - Let's Go!"/>
  </properties>
@@ -29,19 +29,16 @@
   <object id="26" type="COLLISION" x="255.875" y="0.25" width="18" height="94.75"/>
  </objectgroup>
  <objectgroup id="2" name="entities" class="Bat Spawns">
-  <object id="1" name="BAT" x="232.545" y="25.0909">
+  <object id="1" name="BAT" type="ENTITY" x="232.545" y="25.0909">
    <point/>
   </object>
-  <object id="3" name="BAT" x="64.7273" y="11.0909">
+  <object id="3" name="BAT" type="ENTITY" x="64.7273" y="11.0909">
    <point/>
   </object>
-  <object id="4" name="BAT" x="154.364" y="43.4545">
+  <object id="4" name="BAT" type="ENTITY" x="154.364" y="43.4545">
    <point/>
   </object>
-  <object id="5" name="BAT" x="193.636" y="33.8182">
-   <point/>
-  </object>
-  <object id="13" name="DOOR" type="COLLISION" x="210.125" y="81.75">
+  <object id="5" name="BAT" type="ENTITY" x="193.636" y="33.8182">
    <point/>
   </object>
   <object id="28" name="PLAYER" type="ENTITY" x="22.375" y="9.375" width="32" height="32">
@@ -51,5 +48,6 @@ Gravity
 Collider</property>
    </properties>
   </object>
+  <object id="29" name="DOOR" type="ENTITY" x="203.625" y="73.25" width="16" height="16"/>
  </objectgroup>
 </map>
