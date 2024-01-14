@@ -43,8 +43,8 @@ impl<'a> Game<'a> {
                     entity.tag(),
                     position.into(),
                     maybe_size.map(|size| size.into()),
-                    Some((num!(0.2), num!(8.0)).into()),
-                    Some((num!(1.0), num!(1.0)).into()),
+                    Some((num!(1.4), num!(7.0)).into()),
+                    Some((num!(1.0), num!(0.6)).into()),
                 ),
                 EntityType::Door => Actor::new(
                     entity.tag(),

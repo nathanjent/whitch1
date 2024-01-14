@@ -33,6 +33,9 @@
    <point/>
   </object>
   <object id="3" name="BAT" type="ENTITY" x="64.7273" y="11.0909">
+   <properties>
+    <property name="behavior" value="FLAP"/>
+   </properties>
    <point/>
   </object>
   <object id="4" name="BAT" type="ENTITY" x="154.364" y="43.4545">
@@ -44,8 +47,7 @@
   <object id="28" name="PLAYER" type="ENTITY" x="22.375" y="9.375" width="32" height="32">
    <properties>
     <property name="behaviors">Input
-Gravity
-Collider</property>
+Player</property>
    </properties>
   </object>
   <object id="29" name="DOOR" type="ENTITY" x="203.625" y="73.25" width="16" height="16"/>
