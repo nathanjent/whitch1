@@ -35,14 +35,18 @@ impl<'a> Game<'a> {
     }
 
     pub fn load_level(&mut self) {
-        for Entity(entity, position, maybe_size, behaviors) in self.level.starting_positions {
+        for Entity(entity, position, maybe_size, behaviors, sprite_offset) in
+            self.level.starting_positions
+        {
             let position = *position;
             let maybe_size = *maybe_size;
+            let offset = *sprite_offset;
             let actor = match entity {
                 EntityType::Player | EntityType::Bat => Actor::new(
                     entity.tag(),
                     position.into(),
                     maybe_size.map(|size| size.into()),
+                    offset.into(),
                     Some((num!(1.4), num!(7.0)).into()),
                     Some((num!(1.0), num!(0.6)).into()),
                 ),
@@ -50,7 +54,10 @@ impl<'a> Game<'a> {
                     entity.tag(),
                     position.into(),
                     maybe_size.map(|size| size.into()),
-                    None, None),
+                    offset.into(),
+                    None,
+                    None,
+                ),
             };
 
             self.actors.insert(actor);

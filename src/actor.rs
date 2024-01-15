@@ -30,10 +30,12 @@ pub struct Actor<'a> {
     pub acceleration: Vector2D<Number>,
     pub max_velocity: Vector2D<Number>,
     pub collision_mask: Rect<Number>,
+    pub sprite_offset: Vector2D<Number>,
     pub visible: bool,
     pub state: ActorState,
     pub current_action: Action,
     pub direction_x: Tri,
+    pub facing: Tri,
     pub jump_height: Number,
     pub jump_time: Number,
     pub jump_distance_to_peak: Number,
@@ -45,11 +47,13 @@ impl<'a> Actor<'a> {
         tag: &'a Tag,
         position: Vector2D<Number>,
         maybe_size: Option<Vector2D<Number>>,
+        offset: Vector2D<Number>,
         max_velocity: Option<Vector2D<Number>>,
         acceleration: Option<Vector2D<Number>>,
     ) -> Self {
         Self {
             tag,
+            sprite_offset: offset,
             velocity: (0, 0).into(),
             acceleration: acceleration.unwrap_or((num!(0.2), num!(0.2)).into()),
             max_velocity: max_velocity.unwrap_or((1, 1).into()),
@@ -68,18 +72,20 @@ impl<'a> Actor<'a> {
             jump_time: 0.into(),
             jump_distance_to_peak: 0.into(),
             direction_x: Tri::Zero,
+            facing: Tri::Zero,
         }
     }
 
     pub fn render(&self, loader: &mut SpriteLoader, oam: &mut OamIterator) {
         let sprite = loader.get_vram_sprite(self.tag.animation_sprite(self.frame / 16));
         let mut obj = ObjectUnmanaged::new(sprite);
+        let position = self.collision_mask.position + self.sprite_offset;
         obj.show()
             .set_position(Vector2D {
-                x: self.collision_mask.position.x.trunc(),
-                y: self.collision_mask.position.y.trunc(),
+                x: position.x.trunc(),
+                y: position.y.trunc(),
             })
-            .set_hflip(self.direction_x == Tri::Negative);
+            .set_hflip(self.facing == Tri::Negative);
         if let Some(slot) = oam.next() {
             slot.set(&obj);
         }

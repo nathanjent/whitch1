@@ -125,7 +125,13 @@ impl FromStr for Behavior {
     }
 }
 
-struct Entity(EntityType, (i32, i32), Option<(i32, i32)>, Vec<Behavior>);
+struct Entity(
+    EntityType,
+    (i32, i32),
+    Option<(i32, i32)>,
+    Vec<Behavior>,
+    (i32, i32),
+);
 struct CollisionRect((i32, i32), (i32, i32));
 
 impl quote::ToTokens for Entity {
@@ -140,7 +146,12 @@ impl quote::ToTokens for Entity {
         };
         let behaviors = &self.3;
 
-        tokens.append_all(quote!(Entity(#entity_type, #location, #size, &[#(#behaviors),*])))
+        let offset_x = &self.4 .0;
+        let offset_y = &self.4 .1;
+        let sprite_offset = quote!(Vector2D::new(#offset_x, #offset_y));
+
+        tokens
+            .append_all(quote!(Entity(#entity_type, #location, #size, &[#(#behaviors),*], #sprite_offset)))
     }
 }
 
@@ -254,18 +265,37 @@ fn export_level(map: &tiled::Map) -> Level {
                     None => Vec::new(),
                 };
 
+                let offset_x = obj
+                    .properties
+                    .get("offset_x")
+                    .map(|p| match p {
+                        PropertyValue::IntValue(x) => *x,
+                        _ => panic!("offset_x should be an int value"),
+                    })
+                    .unwrap_or(0);
+                let offset_y = obj
+                    .properties
+                    .get("offset_y")
+                    .map(|p| match p {
+                        PropertyValue::IntValue(y) => *y,
+                        _ => panic!("offset_x should be an int value"),
+                    })
+                    .unwrap_or(0);
+
                 match obj.shape {
                     tiled::ObjectShape::Rect { width, height } => Some(Entity(
                         entity_type,
                         (obj.x as i32, obj.y as i32),
                         Some((width as i32, height as i32)),
                         behaviors,
+                        (offset_x, offset_y),
                     )),
                     tiled::ObjectShape::Point(x, y) => Some(Entity(
                         entity_type,
                         (x as i32, y as i32),
                         None,
                         behaviors,
+                        (offset_x, offset_y),
                     )),
                     _ => None,
                 }

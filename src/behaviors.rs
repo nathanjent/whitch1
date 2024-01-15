@@ -53,6 +53,7 @@ impl Behavior {
                             if actor.state == ActorState::Idle {
                                 actor.state = ActorState::Running;
                             }
+                            actor.facing = actor.direction_x;
                         }
                     }
                     Tri::Positive => {
@@ -61,12 +62,13 @@ impl Behavior {
                             if actor.state == ActorState::Idle {
                                 actor.state = ActorState::Running;
                             }
+                            actor.facing = actor.direction_x;
                         }
                     }
                     Tri::Zero => {}
                 }
                 if vx == actor.velocity.x {
-                    actor.velocity.x = util::lerp(0.into(), actor.velocity.x, num!(0.1))
+                    actor.velocity.x = util::lerp(actor.velocity.x, 0.into(), actor.acceleration.x)
                 }
 
                 if actor.hit_wall(collision_rects, num!(3.0)) {
@@ -108,7 +110,12 @@ impl Behavior {
 
         logger.and_then(|mut l| {
             l.print(
-                format_args!("actor_state: {:?}", actor.state),
+                format_args!(
+                    "actor_state: {:?} x: {:?} y: {:?}",
+                    actor.state,
+                    actor.collision_mask.position.x,
+                    actor.collision_mask.position.y
+                ),
                 agb::mgba::DebugLevel::Debug,
             )
             .ok()
