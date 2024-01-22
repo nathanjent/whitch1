@@ -32,9 +32,9 @@
   <object id="1" name="BAT" type="ENTITY" x="232.545" y="25.0909">
    <point/>
   </object>
-  <object id="3" name="BAT" type="ENTITY" x="64.7273" y="11.0909">
+  <object id="3" name="BAT" type="ENTITY" x="91.7273" y="25.3409">
    <properties>
-    <property name="behavior" value="FLAP"/>
+    <property name="behaviors" value="Flap"/>
    </properties>
    <point/>
   </object>

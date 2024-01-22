@@ -2,8 +2,6 @@ use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::SpriteLoader;
 use agb::display::object::Tag;
-use agb::fixnum::FixedWidthSignedInteger;
-use agb::fixnum::FixedWidthUnsignedInteger;
 use agb::fixnum::{num, FixedNum, Rect, Vector2D};
 use agb::input::Tri;
 
@@ -40,6 +38,7 @@ pub struct Actor<'a> {
     pub jump_time: Number,
     pub jump_distance_to_peak: Number,
     frame: usize,
+    health: Number,
 }
 
 impl<'a> Actor<'a> {
@@ -73,6 +72,7 @@ impl<'a> Actor<'a> {
             jump_distance_to_peak: 0.into(),
             direction_x: Tri::Zero,
             facing: Tri::Zero,
+            health: num!(100.0),
         }
     }
 
@@ -166,5 +166,9 @@ impl<'a> Actor<'a> {
             }
             false
         })
+    }
+
+    pub fn take_damage(&mut self) {
+        self.health -= 1;
     }
 }
