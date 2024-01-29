@@ -1,9 +1,11 @@
-# AGBRS template
+# Witch Game Boy Advance Game
 
-## A basic template example for agb projects
+A game about a witch trying to make sense if the world.
 
-This makes getting started with a new project for the Game Boy Advance in rust really simple, by providing
-all the boiler plate files for you.
+## Play Online
+
+You can play the latest version of the game [here](
+https://gba.ninja/?autorun=https://github.com/nathanjent/whitch1/releases/download/latest/whitch.gba).
 
 ## Building
 
