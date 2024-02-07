@@ -30,7 +30,7 @@ jobs:
         run: cargo install agb-gbafix
 
       - name: Update binary for hardware
-        run: agb-gbafix target/thumbv4t-none-eabi/release/whitch -o whitch.gba
+        run: agb-gbafix target/thumbv4t-none-eabi/release/whitch --output whitch.gba --gamecode WTCH --makercode N8
 
       - name: Upload development release
         uses: marvinpinto/action-automatic-releases@latest
