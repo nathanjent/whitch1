@@ -32,7 +32,10 @@
   <object id="1" name="BAT" type="ENTITY" x="232.545" y="25.0909">
    <point/>
   </object>
-  <object id="3" name="BAT" type="ENTITY" x="64.7273" y="11.0909">
+  <object id="3" name="BAT" type="ENTITY" x="91.7273" y="25.3409">
+   <properties>
+    <property name="behaviors" value="Flap"/>
+   </properties>
    <point/>
   </object>
   <object id="4" name="BAT" type="ENTITY" x="154.364" y="43.4545">
@@ -41,11 +44,12 @@
   <object id="5" name="BAT" type="ENTITY" x="193.636" y="33.8182">
    <point/>
   </object>
-  <object id="28" name="PLAYER" type="ENTITY" x="22.375" y="9.375" width="32" height="32">
+  <object id="28" name="PLAYER" type="ENTITY" x="22.375" y="9.375" width="16" height="32">
    <properties>
     <property name="behaviors">Input
-Gravity
-Collider</property>
+Player</property>
+    <property name="offset_x" type="int" value="-8"/>
+    <property name="offset_y" type="int" value="0"/>
    </properties>
   </object>
   <object id="29" name="DOOR" type="ENTITY" x="203.625" y="73.25" width="16" height="16"/>

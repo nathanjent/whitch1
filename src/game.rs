@@ -1,3 +1,4 @@
+use alloc::vec;
 use crate::behaviors::Behavior;
 use crate::level::EntityType;
 use crate::sfx::Sfx;
@@ -7,17 +8,24 @@ use agb::display::object::SpriteLoader;
 use agb::fixnum::num;
 use agb::input::ButtonController;
 use alloc::vec::Vec;
-use generational_arena::Arena;
+use slotmap::Key;
+use slotmap::new_key_type;
+use slotmap::SecondaryMap;
+use slotmap::SlotMap;
 
 use crate::actor::Actor;
 use crate::level::Entity;
 use crate::level::Level;
 
+new_key_type! { pub struct ActorKey; }
+
 pub struct Game<'a> {
     level: &'a Level,
     input: ButtonController,
-    actors: Arena<Actor<'a>>,
-    behaviors: Arena<Arena<Behavior>>,
+    actors: SlotMap<ActorKey, Actor<'a>>,
+    behaviors: SecondaryMap<ActorKey, &'a [Behavior]>,
+    player: ActorKey,
+    enemies: Vec<ActorKey>,
     frame: usize,
     render_cache: Vec<RenderCache>,
 }
@@ -27,35 +35,64 @@ impl<'a> Game<'a> {
         Self {
             level,
             input: ButtonController::new(),
-            actors: Arena::with_capacity(100),
-            behaviors: Arena::with_capacity(100),
+            actors: SlotMap::with_capacity_and_key(100),
+            behaviors: SecondaryMap::with_capacity(100),
+            player: ActorKey::null(),
+            enemies: vec![ActorKey::null(); 100],
             frame: 0,
             render_cache: Vec::with_capacity(100),
         }
     }
 
     pub fn load_level(&mut self) {
-        for Entity(entity, position, maybe_size, behaviors) in self.level.starting_positions {
+        for Entity(entity, position, maybe_size, behaviors, sprite_offset) in
+            self.level.starting_positions
+        {
             let position = *position;
             let maybe_size = *maybe_size;
-            let actor = match entity {
-                EntityType::Player | EntityType::Bat => Actor::new(
-                    entity.tag(),
-                    position.into(),
-                    maybe_size.map(|size| size.into()),
-                    Some((num!(0.2), num!(8.0)).into()),
-                    Some((num!(1.0), num!(1.0)).into()),
-                ),
-                EntityType::Door => Actor::new(
-                    entity.tag(),
-                    position.into(),
-                    maybe_size.map(|size| size.into()),
-                    None, None),
+            let offset = *sprite_offset;
+            let key = match entity {
+                EntityType::Player => {
+                    let actor = Actor::new(
+                        entity.tag(),
+                        position.into(),
+                        maybe_size.map(|size| size.into()),
+                        offset.into(),
+                        Some((num!(1.4), num!(7.0)).into()),
+                        Some((num!(1.0), num!(0.6)).into()),
+                    );
+                    let key = self.actors.insert(actor);
+                    self.player = key;
+                    key
+                }
+                EntityType::Bat => {
+                    let actor = Actor::new(
+                        entity.tag(),
+                        position.into(),
+                        maybe_size.map(|size| size.into()),
+                        offset.into(),
+                        Some((num!(1.4), num!(0.06)).into()),
+                        Some((num!(1.0), num!(0.008)).into()),
+                    );
+                    let key = self.actors.insert(actor);
+                    self.enemies.push(key);
+                    key
+                }
+                EntityType::Door => {
+                    let actor = Actor::new(
+                        entity.tag(),
+                        position.into(),
+                        maybe_size.map(|size| size.into()),
+                        offset.into(),
+                        None,
+                        None,
+                    );
+                    let key = self.actors.insert(actor);
+                    key
+                }
             };
 
-            self.actors.insert(actor);
-            self.behaviors
-                .insert(behaviors.iter().map(|b| *b).collect());
+            self.behaviors.insert(key, *behaviors);
         }
     }
 
@@ -63,13 +100,24 @@ impl<'a> Game<'a> {
         self.input.update();
         self.frame = self.frame.wrapping_add(1);
 
-        for (idx, actor) in self.actors.iter_mut() {
-            if let Some(behaviors) = self.behaviors.get(idx) {
-                for (_, behavior) in behaviors.iter() {
-                    behavior.update(actor, &self.input, self.level.collision_rects, sfx);
+        let keys: Vec<ActorKey> = self.actors.keys().collect();
+        for key in keys {
+            if let Some(behaviors_for_actor) = self.behaviors.get(key) {
+                for behavior in behaviors_for_actor.iter() {
+                    behavior.update(
+                        key,
+                        self.player,
+                        &*self.enemies,
+                        &mut self.actors,
+                        &self.input,
+                        self.level.collision_rects,
+                        sfx,
+                    );
                 }
             }
-            actor.collision_mask.position += actor.velocity;
+            if let Some(actor) = self.actors.get_mut(key) {
+                actor.collision_mask.position += actor.velocity;
+            }
         }
 
         self.cache_render(sprite_loader);
