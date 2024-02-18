@@ -1,4 +1,5 @@
 use alloc::vec;
+use agb::fixnum::Vector2D;
 use crate::behaviors::Behavior;
 use crate::level::EntityType;
 use crate::sfx::Sfx;
@@ -28,6 +29,7 @@ pub struct Game<'a> {
     enemies: Vec<ActorKey>,
     frame: usize,
     render_cache: Vec<RenderCache>,
+    pub scroll_pos: Vector2D<i16>,
 }
 
 impl<'a> Game<'a> {
@@ -41,6 +43,7 @@ impl<'a> Game<'a> {
             enemies: vec![ActorKey::null(); 100],
             frame: 0,
             render_cache: Vec::with_capacity(100),
+            scroll_pos: (0i16, 0i16).into(),
         }
     }
 
@@ -90,6 +93,18 @@ impl<'a> Game<'a> {
                     let key = self.actors.insert(actor);
                     key
                 }
+                EntityType::Arrow => {
+                    let actor = Actor::new(
+                        entity.tag(),
+                        position.into(),
+                        maybe_size.map(|size| size.into()),
+                        offset.into(),
+                        None,
+                        None,
+                    );
+                    let key = self.actors.insert(actor);
+                    key
+                }
             };
 
             self.behaviors.insert(key, *behaviors);
@@ -111,6 +126,7 @@ impl<'a> Game<'a> {
                         &mut self.actors,
                         &self.input,
                         self.level.collision_rects,
+                        &mut self.scroll_pos,
                         sfx,
                     );
                 }
@@ -144,7 +160,7 @@ impl<'a> Game<'a> {
         }
 
         for (_, actor) in self.actors.iter() {
-            actor.render(loader, oam);
+            actor.render(loader, oam, self.frame);
         }
     }
 }

@@ -4,13 +4,12 @@ use crate::{
     sfx::Sfx,
     util,
 };
-use agb::input::Tri;
+use agb::{fixnum::Vector2D, input::Tri};
 use agb::{
     fixnum::{num, Rect},
     input::{Button, ButtonController},
     mgba::Mgba,
 };
-use alloc::vec::Vec;
 use slotmap::SlotMap;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
@@ -18,6 +17,7 @@ pub enum Behavior {
     Input,
     Player,
     Flap,
+    Arrow,
 }
 
 impl Behavior {
@@ -29,6 +29,7 @@ impl Behavior {
         actors: &mut SlotMap<ActorKey, Actor>,
         input: &ButtonController,
         collision_rects: &[Rect<i32>],
+        scroll_pos: &mut Vector2D<i16>,
         sfx: &mut Sfx,
     ) {
         let logger = Mgba::new();
@@ -68,6 +69,7 @@ impl Behavior {
                                     actor.state = ActorState::Running;
                                 }
                                 actor.facing = actor.direction_x;
+                                scroll_pos.x -= 1;
                             }
                         }
                         Tri::Positive => {
@@ -77,6 +79,7 @@ impl Behavior {
                                     actor.state = ActorState::Running;
                                 }
                                 actor.facing = actor.direction_x;
+                                scroll_pos.x += 1;
                             }
                         }
                         Tri::Zero => {}
@@ -86,11 +89,11 @@ impl Behavior {
                             util::lerp(actor.velocity.x, 0.into(), actor.acceleration.x)
                     }
 
-                    if actor.hit_wall(collision_rects, num!(3.0)) {
+                    if actor.hit_wall(collision_rects, num!(3.0), &scroll_pos) {
                         actor.velocity.x = 0.into();
                     }
 
-                    if actor.hit_ground(collision_rects, num!(0.8)) {
+                    if actor.hit_ground(collision_rects, num!(0.8), &scroll_pos) {
                         actor.velocity.y = 0.into();
                         if actor.state == ActorState::Jumping {
                             actor.state = ActorState::Idle;
@@ -111,7 +114,7 @@ impl Behavior {
                         sfx.jump();
                     }
 
-                    if actor.hit_ceiling(collision_rects, num!(0.8)) {
+                    if actor.hit_ceiling(collision_rects, num!(0.8), &scroll_pos) {
                         actor.velocity.y = 0.into();
                     }
 
@@ -135,8 +138,34 @@ impl Behavior {
                         .is_some_and(|r| r)
                 }) {
                     if let Some(actor) = actors.get_mut(current_key) {
+                        actor.velocity.y = 0.into();
+                        actor.state = ActorState::Idle;
+                        actor.jump_height = 0.into();
+                        actor.jump_time = 0.into();
+                    }
+                }
+
+                if enemies_keys.iter().any(|enemy_key: &ActorKey| {
+                    let enemy = actors.get(*enemy_key);
+                    let current = actors.get(current_key);
+
+                    enemy
+                        .map(|e| {
+                            current
+                                .map(|c| e.collision_mask.touches(c.collision_mask))
+                                .is_some_and(|r| r)
+                        })
+                        .is_some_and(|r| r)
+                }) {
+                    if let Some(actor) = actors.get_mut(current_key) {
                         actor.take_damage();
                     }
+                }
+            }
+            Self::Arrow => {
+                if let Some(actor) = actors.get_mut(current_key) {
+                    let Vector2D { x, y } = scroll_pos;
+                    actor.collision_mask.position = (*x as i32, *y as i32).into();
                 }
             }
         }

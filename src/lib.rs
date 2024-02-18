@@ -79,6 +79,7 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
             game.update(&mut sprite_loader, &mut sfx);
 
+            level_bg1.set_scroll_pos(game.scroll_pos);
             level_bg1.commit(&mut vram);
             level_bg1.show();
 

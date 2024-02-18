@@ -37,7 +37,6 @@ pub struct Actor<'a> {
     pub jump_height: Number,
     pub jump_time: Number,
     pub jump_distance_to_peak: Number,
-    frame: usize,
     health: Number,
 }
 
@@ -66,7 +65,6 @@ impl<'a> Actor<'a> {
             visible: true,
             state: ActorState::Idle,
             current_action: Action::None,
-            frame: 0,
             jump_height: 0.into(),
             jump_time: 0.into(),
             jump_distance_to_peak: 0.into(),
@@ -76,8 +74,8 @@ impl<'a> Actor<'a> {
         }
     }
 
-    pub fn render(&self, loader: &mut SpriteLoader, oam: &mut OamIterator) {
-        let sprite = loader.get_vram_sprite(self.tag.animation_sprite(self.frame / 16));
+    pub fn render(&self, loader: &mut SpriteLoader, oam: &mut OamIterator, frame: usize) {
+        let sprite = loader.get_vram_sprite(self.tag.animation_sprite(frame / 16));
         let mut obj = ObjectUnmanaged::new(sprite);
         let position = self.collision_mask.position + self.sprite_offset;
         obj.show()
@@ -100,12 +98,18 @@ impl<'a> Actor<'a> {
         (x, y, x + width, y + height)
     }
 
-    pub fn hit_ground(&self, collision_rects: &[Rect<i32>], sampling: Number) -> bool {
+    pub fn hit_ground(
+        &self,
+        collision_rects: &[Rect<i32>],
+        sampling: Number,
+        offset: &Vector2D<i16>,
+    ) -> bool {
         collision_rects.iter().any(|Rect { position, size }| {
             let position = *position;
+            let Vector2D { x, y } = *offset;
             let size = *size;
             let collision_rect: Rect<Number> = Rect {
-                position: position.into(),
+                position: (position + (x, y).into()).into(),
                 size: size.into(),
             };
 
@@ -121,12 +125,18 @@ impl<'a> Actor<'a> {
         })
     }
 
-    pub fn hit_ceiling(&self, collision_rects: &[Rect<i32>], sampling: Number) -> bool {
+    pub fn hit_ceiling(
+        &self,
+        collision_rects: &[Rect<i32>],
+        sampling: Number,
+        offset: &Vector2D<i16>,
+    ) -> bool {
         collision_rects.iter().any(|Rect { position, size }| {
             let position = *position;
+            let Vector2D { x, y } = *offset;
             let size = *size;
             let collision_rect: Rect<Number> = Rect {
-                position: position.into(),
+                position: (position + (x, y).into()).into(),
                 size: size.into(),
             };
 
@@ -142,30 +152,41 @@ impl<'a> Actor<'a> {
         })
     }
 
-    pub fn hit_wall(&self, collision_rects: &[Rect<i32>], sampling: Number) -> bool {
-        collision_rects.iter().any(|Rect { position, size }| {
-            let position = *position;
-            let size = *size;
-            let collision_rect: Rect<Number> = Rect {
-                position: position.into(),
-                size: size.into(),
-            };
-
-            let (min_x, min_y, max_x, max_y) = self.aabb();
-            let mut y = min_y;
-            while y < max_y - self.velocity.y {
-                let x = if self.velocity.x.to_raw().is_negative() {
-                    min_x
-                } else {
-                    max_x
+    pub fn hit_wall(
+        &self,
+        collision_rects: &[Rect<i32>],
+        sampling: Number,
+        offset: &Vector2D<i16>,
+    ) -> bool {
+        collision_rects.iter().any(
+            |Rect {
+                 position,
+                 size,
+             }| {
+                let position = *position;
+                let Vector2D { x, y } = *offset;
+                let size = *size;
+                let collision_rect: Rect<Number> = Rect {
+                    position: (position + (x, y).into()).into(),
+                    size: size.into(),
                 };
-                if collision_rect.contains_point((x, y.into()).into()) {
-                    return true;
+
+                let (min_x, min_y, max_x, max_y) = self.aabb();
+                let mut y = min_y;
+                while y < max_y - self.velocity.y {
+                    let x = if self.velocity.x.to_raw().is_negative() {
+                        min_x
+                    } else {
+                        max_x
+                    };
+                    if collision_rect.contains_point((x, y.into()).into()) {
+                        return true;
+                    }
+                    y += sampling;
                 }
-                y += sampling;
-            }
-            false
-        })
+                false
+            },
+        )
     }
 
     pub fn take_damage(&mut self) {
