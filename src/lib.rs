@@ -12,6 +12,8 @@ use agb::display::object::TextAlignment;
 use agb::display::palette16::Palette16;
 use agb::display::tiled::TiledMap;
 use agb::display::WIDTH;
+use agb::fixnum::FixedNum;
+use agb::fixnum::Vector2D;
 
 use core::fmt::Write;
 
@@ -79,7 +81,14 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
             game.update(&mut sprite_loader, &mut sfx);
 
-            level_bg1.set_scroll_pos(game.scroll_pos);
+            // Update scroll
+            let Vector2D { x: sx, y: sy } = game.scroll_pos;
+            if let Ok(sx) = sx.trunc().try_into() {
+                if let Ok(sy) = sy.trunc().try_into() {
+                    level_bg1.set_scroll_pos(-Vector2D { x: sx, y: sy });
+                }
+            }
+
             level_bg1.commit(&mut vram);
             level_bg1.show();
 

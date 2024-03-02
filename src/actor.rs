@@ -74,10 +74,16 @@ impl<'a> Actor<'a> {
         }
     }
 
-    pub fn render(&self, loader: &mut SpriteLoader, oam: &mut OamIterator, frame: usize) {
+    pub fn render(
+        &self,
+        loader: &mut SpriteLoader,
+        oam: &mut OamIterator,
+        scroll_pos: Vector2D<FixedNum<8>>,
+        frame: usize,
+    ) {
         let sprite = loader.get_vram_sprite(self.tag.animation_sprite(frame / 16));
         let mut obj = ObjectUnmanaged::new(sprite);
-        let position = self.collision_mask.position + self.sprite_offset;
+        let position = self.collision_mask.position + scroll_pos + self.sprite_offset;
         obj.show()
             .set_position(Vector2D {
                 x: position.x.trunc(),
@@ -102,14 +108,12 @@ impl<'a> Actor<'a> {
         &self,
         collision_rects: &[Rect<i32>],
         sampling: Number,
-        offset: &Vector2D<i16>,
     ) -> bool {
         collision_rects.iter().any(|Rect { position, size }| {
             let position = *position;
-            let Vector2D { x, y } = *offset;
             let size = *size;
             let collision_rect: Rect<Number> = Rect {
-                position: (position + (x, y).into()).into(),
+                position: position.into(),
                 size: size.into(),
             };
 
@@ -129,14 +133,12 @@ impl<'a> Actor<'a> {
         &self,
         collision_rects: &[Rect<i32>],
         sampling: Number,
-        offset: &Vector2D<i16>,
     ) -> bool {
         collision_rects.iter().any(|Rect { position, size }| {
             let position = *position;
-            let Vector2D { x, y } = *offset;
             let size = *size;
             let collision_rect: Rect<Number> = Rect {
-                position: (position + (x, y).into()).into(),
+                position: position.into(),
                 size: size.into(),
             };
 
@@ -156,37 +158,30 @@ impl<'a> Actor<'a> {
         &self,
         collision_rects: &[Rect<i32>],
         sampling: Number,
-        offset: &Vector2D<i16>,
     ) -> bool {
-        collision_rects.iter().any(
-            |Rect {
-                 position,
-                 size,
-             }| {
-                let position = *position;
-                let Vector2D { x, y } = *offset;
-                let size = *size;
-                let collision_rect: Rect<Number> = Rect {
-                    position: (position + (x, y).into()).into(),
-                    size: size.into(),
-                };
+        collision_rects.iter().any(|Rect { position, size }| {
+            let position = *position;
+            let size = *size;
+            let collision_rect: Rect<Number> = Rect {
+                position: position.into(),
+                size: size.into(),
+            };
 
-                let (min_x, min_y, max_x, max_y) = self.aabb();
-                let mut y = min_y;
-                while y < max_y - self.velocity.y {
-                    let x = if self.velocity.x.to_raw().is_negative() {
-                        min_x
-                    } else {
-                        max_x
-                    };
-                    if collision_rect.contains_point((x, y.into()).into()) {
-                        return true;
-                    }
-                    y += sampling;
+            let (min_x, min_y, max_x, max_y) = self.aabb();
+            let mut y = min_y;
+            while y < max_y - self.velocity.y {
+                let x = if self.velocity.x.to_raw().is_negative() {
+                    min_x
+                } else {
+                    max_x
+                };
+                if collision_rect.contains_point((x, y.into()).into()) {
+                    return true;
                 }
-                false
-            },
-        )
+                y += sampling;
+            }
+            false
+        })
     }
 
     pub fn take_damage(&mut self) {
