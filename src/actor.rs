@@ -37,7 +37,6 @@ pub struct Actor<'a> {
     pub jump_height: Number,
     pub jump_time: Number,
     pub jump_distance_to_peak: Number,
-    frame: usize,
     health: Number,
 }
 
@@ -66,7 +65,6 @@ impl<'a> Actor<'a> {
             visible: true,
             state: ActorState::Idle,
             current_action: Action::None,
-            frame: 0,
             jump_height: 0.into(),
             jump_time: 0.into(),
             jump_distance_to_peak: 0.into(),
@@ -76,10 +74,16 @@ impl<'a> Actor<'a> {
         }
     }
 
-    pub fn render(&self, loader: &mut SpriteLoader, oam: &mut OamIterator) {
-        let sprite = loader.get_vram_sprite(self.tag.animation_sprite(self.frame / 16));
+    pub fn render(
+        &self,
+        loader: &mut SpriteLoader,
+        oam: &mut OamIterator,
+        scroll_pos: Vector2D<FixedNum<8>>,
+        frame: usize,
+    ) {
+        let sprite = loader.get_vram_sprite(self.tag.animation_sprite(frame / 16));
         let mut obj = ObjectUnmanaged::new(sprite);
-        let position = self.collision_mask.position + self.sprite_offset;
+        let position = self.collision_mask.position + scroll_pos + self.sprite_offset;
         obj.show()
             .set_position(Vector2D {
                 x: position.x.trunc(),
@@ -100,7 +104,11 @@ impl<'a> Actor<'a> {
         (x, y, x + width, y + height)
     }
 
-    pub fn hit_ground(&self, collision_rects: &[Rect<i32>], sampling: Number) -> bool {
+    pub fn hit_ground(
+        &self,
+        collision_rects: &[Rect<i32>],
+        sampling: Number,
+    ) -> bool {
         collision_rects.iter().any(|Rect { position, size }| {
             let position = *position;
             let size = *size;
@@ -121,7 +129,11 @@ impl<'a> Actor<'a> {
         })
     }
 
-    pub fn hit_ceiling(&self, collision_rects: &[Rect<i32>], sampling: Number) -> bool {
+    pub fn hit_ceiling(
+        &self,
+        collision_rects: &[Rect<i32>],
+        sampling: Number,
+    ) -> bool {
         collision_rects.iter().any(|Rect { position, size }| {
             let position = *position;
             let size = *size;
@@ -142,7 +154,11 @@ impl<'a> Actor<'a> {
         })
     }
 
-    pub fn hit_wall(&self, collision_rects: &[Rect<i32>], sampling: Number) -> bool {
+    pub fn hit_wall(
+        &self,
+        collision_rects: &[Rect<i32>],
+        sampling: Number,
+    ) -> bool {
         collision_rects.iter().any(|Rect { position, size }| {
             let position = *position;
             let size = *size;

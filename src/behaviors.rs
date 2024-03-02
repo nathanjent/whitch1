@@ -10,7 +10,6 @@ use agb::{
     input::{Button, ButtonController},
     mgba::Mgba,
 };
-use alloc::vec::Vec;
 use slotmap::SlotMap;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
@@ -18,6 +17,7 @@ pub enum Behavior {
     Input,
     Player,
     Flap,
+    Arrow,
 }
 
 impl Behavior {
@@ -138,6 +138,8 @@ impl Behavior {
                         actor.take_damage();
                     }
                 }
+            }
+            Self::Arrow => {
             }
         }
 

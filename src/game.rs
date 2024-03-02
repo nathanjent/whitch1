@@ -1,15 +1,21 @@
-use alloc::vec;
+use crate::util::lerp;
 use crate::behaviors::Behavior;
 use crate::level::EntityType;
 use crate::sfx::Sfx;
 use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::SpriteLoader;
+use agb::display::HEIGHT;
+use agb::display::WIDTH;
 use agb::fixnum::num;
+use agb::fixnum::Num;
+use agb::fixnum::Rect;
+use agb::fixnum::{FixedNum, Vector2D};
 use agb::input::ButtonController;
+use alloc::vec;
 use alloc::vec::Vec;
-use slotmap::Key;
 use slotmap::new_key_type;
+use slotmap::Key;
 use slotmap::SecondaryMap;
 use slotmap::SlotMap;
 
@@ -28,6 +34,7 @@ pub struct Game<'a> {
     enemies: Vec<ActorKey>,
     frame: usize,
     render_cache: Vec<RenderCache>,
+    pub scroll_pos: Vector2D<FixedNum<8>>,
 }
 
 impl<'a> Game<'a> {
@@ -41,6 +48,7 @@ impl<'a> Game<'a> {
             enemies: vec![ActorKey::null(); 100],
             frame: 0,
             render_cache: Vec::with_capacity(100),
+            scroll_pos: (0, 0).into(),
         }
     }
 
@@ -90,6 +98,18 @@ impl<'a> Game<'a> {
                     let key = self.actors.insert(actor);
                     key
                 }
+                EntityType::Arrow => {
+                    let actor = Actor::new(
+                        entity.tag(),
+                        position.into(),
+                        maybe_size.map(|size| size.into()),
+                        offset.into(),
+                        None,
+                        None,
+                    );
+                    let key = self.actors.insert(actor);
+                    key
+                }
             };
 
             self.behaviors.insert(key, *behaviors);
@@ -100,12 +120,12 @@ impl<'a> Game<'a> {
         self.input.update();
         self.frame = self.frame.wrapping_add(1);
 
-        let keys: Vec<ActorKey> = self.actors.keys().collect();
-        for key in keys {
-            if let Some(behaviors_for_actor) = self.behaviors.get(key) {
+        let actor_keys: Vec<ActorKey> = self.actors.keys().collect();
+        for actor_key in actor_keys {
+            if let Some(behaviors_for_actor) = self.behaviors.get(actor_key) {
                 for behavior in behaviors_for_actor.iter() {
                     behavior.update(
-                        key,
+                        actor_key,
                         self.player,
                         &*self.enemies,
                         &mut self.actors,
@@ -115,9 +135,21 @@ impl<'a> Game<'a> {
                     );
                 }
             }
-            if let Some(actor) = self.actors.get_mut(key) {
+            if let Some(actor) = self.actors.get_mut(actor_key) {
                 actor.collision_mask.position += actor.velocity;
             }
+        }
+
+        if let Some(player) = self.actors.get(self.player) {
+            let Rect { position, size: _ } = player.collision_mask;
+
+            let bound_x = Num::from(WIDTH/2);
+            let bound_y = Num::from(HEIGHT/2);
+
+            self.scroll_pos = Vector2D {
+                x: Num::min(bound_x, lerp(self.scroll_pos.x.into(), (bound_x - position.x).into(), num!(0.05))),
+                y: Num::min(bound_y, lerp(self.scroll_pos.y.into(), (bound_y - position.y).into(), num!(0.05))),
+            };
         }
 
         self.cache_render(sprite_loader);
@@ -144,7 +176,7 @@ impl<'a> Game<'a> {
         }
 
         for (_, actor) in self.actors.iter() {
-            actor.render(loader, oam);
+            actor.render(loader, oam, self.scroll_pos, self.frame);
         }
     }
 }

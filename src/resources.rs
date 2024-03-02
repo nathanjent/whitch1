@@ -33,6 +33,7 @@ named_tag!(
         W_RUN,
         BAT,
         DOOR,
+        ARROW,
     ]
 );
 
