@@ -63,7 +63,6 @@ enum EntityType {
     Player,
     Bat,
     Door,
-    Arrow,
 }
 
 impl FromStr for EntityType {
@@ -76,7 +75,6 @@ impl FromStr for EntityType {
             "PLAYER" => Player,
             "BAT" => Bat,
             "DOOR" => Door,
-            "ARROW" => Arrow,
             _ => return Err(()),
         })
     }
@@ -90,7 +88,6 @@ impl quote::ToTokens for EntityType {
             Bat => quote!(EntityType::Bat),
             Player => quote!(EntityType::Player),
             Door => quote!(EntityType::Door),
-            Arrow => quote!(EntityType::Arrow),
         })
     }
 }
@@ -103,7 +100,6 @@ impl quote::ToTokens for Behavior {
             Input => quote!(Behavior::Input),
             Player => quote!(Behavior::Player),
             Flap => quote!(Behavior::Flap),
-            Arrow => quote!(Behavior::Arrow),
         })
     }
 }
@@ -112,7 +108,6 @@ enum Behavior {
     Input,
     Player,
     Flap,
-    Arrow,
 }
 
 impl FromStr for Behavior {
@@ -125,7 +120,6 @@ impl FromStr for Behavior {
             "Input" => Input,
             "Player" => Player,
             "Flap" => Flap,
-            "Arrow" => Arrow,
             _ => return Err(()),
         })
     }

@@ -81,7 +81,7 @@ impl<'a> Actor<'a> {
         scroll_pos: Vector2D<FixedNum<8>>,
         frame: usize,
     ) {
-        let sprite = loader.get_vram_sprite(self.tag.animation_sprite(frame / 16));
+        let sprite = loader.get_vram_sprite(self.tag.animation_sprite(frame / 12));
         let mut obj = ObjectUnmanaged::new(sprite);
         let position = self.collision_mask.position + scroll_pos + self.sprite_offset;
         obj.show()

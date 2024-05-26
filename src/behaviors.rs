@@ -17,7 +17,6 @@ pub enum Behavior {
     Input,
     Player,
     Flap,
-    Arrow,
 }
 
 impl Behavior {
@@ -138,8 +137,6 @@ impl Behavior {
                         actor.take_damage();
                     }
                 }
-            }
-            Self::Arrow => {
             }
         }
 

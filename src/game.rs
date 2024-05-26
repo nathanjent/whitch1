@@ -98,18 +98,6 @@ impl<'a> Game<'a> {
                     let key = self.actors.insert(actor);
                     key
                 }
-                EntityType::Arrow => {
-                    let actor = Actor::new(
-                        entity.tag(),
-                        position.into(),
-                        maybe_size.map(|size| size.into()),
-                        offset.into(),
-                        None,
-                        None,
-                    );
-                    let key = self.actors.insert(actor);
-                    key
-                }
             };
 
             self.behaviors.insert(key, *behaviors);

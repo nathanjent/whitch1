@@ -12,7 +12,6 @@ use agb::display::object::TextAlignment;
 use agb::display::palette16::Palette16;
 use agb::display::tiled::TiledMap;
 use agb::display::WIDTH;
-use agb::fixnum::FixedNum;
 use agb::fixnum::Vector2D;
 
 use core::fmt::Write;
@@ -61,7 +60,7 @@ pub fn entry(mut gba: agb::Gba) -> ! {
     loop {
         let mut level_bg1 = tiled.background(
             Priority::P1,
-            RegularBackgroundSize::Background32x32,
+            RegularBackgroundSize::Background64x32,
             TileFormat::FourBpp,
         );
 

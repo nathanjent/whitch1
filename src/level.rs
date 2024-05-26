@@ -6,7 +6,6 @@ pub enum EntityType {
     Player,
     Bat,
     Door,
-    Arrow,
 }
 
 impl EntityType {
@@ -15,7 +14,6 @@ impl EntityType {
             EntityType::Player => resources::W_IDLE,
             EntityType::Bat => resources::BAT,
             EntityType::Door => resources::DOOR,
-            EntityType::Arrow => resources::ARROW,
         }
     }
 }
