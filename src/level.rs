@@ -1,5 +1,5 @@
-use crate::{resources, behaviors::Behavior};
-use agb::{display::object::Tag, fixnum::{Vector2D, Rect}};
+use crate::{actor::ActorState, behaviors::Behavior, resources};
+use agb::{display::object::Tag, fixnum::{Rect, Vector2D}, hash_map::HashMap};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum EntityType {
@@ -9,12 +9,23 @@ pub enum EntityType {
 }
 
 impl EntityType {
-    pub fn tag(&self) -> &'static Tag {
+    pub fn tags(&self) -> HashMap<ActorState, &'static Tag> {
+        let mut tags = HashMap::new();
         match self {
-            EntityType::Player => resources::W_IDLE,
-            EntityType::Bat => resources::BAT,
-            EntityType::Door => resources::DOOR,
+            EntityType::Player => {
+                tags.insert(ActorState::Idle, resources::W_IDLE);
+                tags.insert(ActorState::Running, resources::W_RUN);
+                tags.insert(ActorState::Jumping, resources::W_JUMP);
+            },
+            EntityType::Bat => {
+                tags.insert(ActorState::Idle, resources::BAT);
+            },
+            EntityType::Door => {
+                tags.insert(ActorState::Idle, resources::DOOR);
+            },
         }
+
+        tags
     }
 }
 

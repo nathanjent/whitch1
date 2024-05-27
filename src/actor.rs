@@ -1,13 +1,11 @@
-use agb::display::object::OamIterator;
-use agb::display::object::ObjectUnmanaged;
-use agb::display::object::SpriteLoader;
 use agb::display::object::Tag;
 use agb::fixnum::{num, FixedNum, Rect, Vector2D};
+use agb::hash_map::HashMap;
 use agb::input::Tri;
 
 type Number = FixedNum<8>;
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum ActorState {
     Idle,
     Jumping,
@@ -23,7 +21,7 @@ pub enum Action {
 }
 
 pub struct Actor<'a> {
-    pub tag: &'a Tag,
+    pub tags: HashMap<ActorState, &'a Tag>,
     pub velocity: Vector2D<Number>,
     pub acceleration: Vector2D<Number>,
     pub max_velocity: Vector2D<Number>,
@@ -42,7 +40,7 @@ pub struct Actor<'a> {
 
 impl<'a> Actor<'a> {
     pub fn new(
-        tag: &'a Tag,
+        tags: HashMap<ActorState, &'a Tag>,
         position: Vector2D<Number>,
         maybe_size: Option<Vector2D<Number>>,
         offset: Vector2D<Number>,
@@ -50,7 +48,7 @@ impl<'a> Actor<'a> {
         acceleration: Option<Vector2D<Number>>,
     ) -> Self {
         Self {
-            tag,
+            tags,
             sprite_offset: offset,
             velocity: (0, 0).into(),
             acceleration: acceleration.unwrap_or((num!(0.2), num!(0.2)).into()),
@@ -71,27 +69,6 @@ impl<'a> Actor<'a> {
             direction_x: Tri::Zero,
             facing: Tri::Zero,
             health: num!(100.0),
-        }
-    }
-
-    pub fn render(
-        &self,
-        loader: &mut SpriteLoader,
-        oam: &mut OamIterator,
-        scroll_pos: Vector2D<FixedNum<8>>,
-        frame: usize,
-    ) {
-        let sprite = loader.get_vram_sprite(self.tag.animation_sprite(frame / 12));
-        let mut obj = ObjectUnmanaged::new(sprite);
-        let position = self.collision_mask.position + scroll_pos + self.sprite_offset;
-        obj.show()
-            .set_position(Vector2D {
-                x: position.x.trunc(),
-                y: position.y.trunc(),
-            })
-            .set_hflip(self.facing == Tri::Negative);
-        if let Some(slot) = oam.next() {
-            slot.set(&obj);
         }
     }
 
