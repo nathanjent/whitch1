@@ -31,9 +31,9 @@ named_tag!(
     [
         W_IDLE,
         W_RUN,
+        W_JUMP,
         BAT,
         DOOR,
-        ARROW,
     ]
 );
 

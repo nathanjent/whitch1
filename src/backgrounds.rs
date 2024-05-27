@@ -1,4 +1,4 @@
-use agb::display::tiled::RegularMap;
+use agb::display::tiled::{BackgroundSize, RegularMap, TiledMap};
 use agb::include_background_gfx;
 use agb::display::tiled::VRamManager;
 

@@ -1,17 +1,21 @@
-use crate::util::lerp;
+use crate::actor::ActorState;
 use crate::behaviors::Behavior;
 use crate::level::EntityType;
 use crate::sfx::Sfx;
+use crate::util::lerp;
 use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::SpriteLoader;
+use agb::display::object::TagMap;
 use agb::display::HEIGHT;
 use agb::display::WIDTH;
 use agb::fixnum::num;
 use agb::fixnum::Num;
 use agb::fixnum::Rect;
 use agb::fixnum::{FixedNum, Vector2D};
+use agb::hash_map::HashMap;
 use agb::input::ButtonController;
+use agb::input::Tri;
 use alloc::vec;
 use alloc::vec::Vec;
 use slotmap::new_key_type;
@@ -62,12 +66,12 @@ impl<'a> Game<'a> {
             let key = match entity {
                 EntityType::Player => {
                     let actor = Actor::new(
-                        entity.tag(),
+                        entity.tags(),
                         position.into(),
                         maybe_size.map(|size| size.into()),
                         offset.into(),
                         Some((num!(1.4), num!(7.0)).into()),
-                        Some((num!(1.0), num!(0.6)).into()),
+                        Some((num!(0.6), num!(0.6)).into()),
                     );
                     let key = self.actors.insert(actor);
                     self.player = key;
@@ -75,12 +79,12 @@ impl<'a> Game<'a> {
                 }
                 EntityType::Bat => {
                     let actor = Actor::new(
-                        entity.tag(),
+                        entity.tags(),
                         position.into(),
                         maybe_size.map(|size| size.into()),
                         offset.into(),
                         Some((num!(1.4), num!(0.06)).into()),
-                        Some((num!(1.0), num!(0.008)).into()),
+                        Some((num!(0.6), num!(0.008)).into()),
                     );
                     let key = self.actors.insert(actor);
                     self.enemies.push(key);
@@ -88,19 +92,7 @@ impl<'a> Game<'a> {
                 }
                 EntityType::Door => {
                     let actor = Actor::new(
-                        entity.tag(),
-                        position.into(),
-                        maybe_size.map(|size| size.into()),
-                        offset.into(),
-                        None,
-                        None,
-                    );
-                    let key = self.actors.insert(actor);
-                    key
-                }
-                EntityType::Arrow => {
-                    let actor = Actor::new(
-                        entity.tag(),
+                        entity.tags(),
                         position.into(),
                         maybe_size.map(|size| size.into()),
                         offset.into(),
@@ -135,6 +127,7 @@ impl<'a> Game<'a> {
                     );
                 }
             }
+
             if let Some(actor) = self.actors.get_mut(actor_key) {
                 actor.collision_mask.position += actor.velocity;
             }
@@ -143,44 +136,72 @@ impl<'a> Game<'a> {
         if let Some(player) = self.actors.get(self.player) {
             let Rect { position, size: _ } = player.collision_mask;
 
-            let bound_x = Num::from(WIDTH/2);
-            let bound_y = Num::from(HEIGHT/2);
+            let bound_x = Num::from(WIDTH / 2);
+            let bound_y = Num::from(HEIGHT / 2);
 
             self.scroll_pos = Vector2D {
-                x: Num::min(bound_x, lerp(self.scroll_pos.x.into(), (bound_x - position.x).into(), num!(0.05))),
-                y: Num::min(bound_y, lerp(self.scroll_pos.y.into(), (bound_y - position.y).into(), num!(0.05))),
+                x: Num::min(
+                    bound_x,
+                    lerp(
+                        self.scroll_pos.x.into(),
+                        (bound_x - position.x).into(),
+                        num!(0.05),
+                    ),
+                ),
+                y: Num::min(
+                    bound_y,
+                    lerp(
+                        self.scroll_pos.y.into(),
+                        (bound_y - position.y).into(),
+                        num!(0.05),
+                    ),
+                ),
             };
         }
 
-        self.cache_render(sprite_loader);
+        //self.cache_render(sprite_loader);
     }
 
-    fn cache_render(&mut self, sprite_loader: &mut SpriteLoader) {
-        self.render_cache = self
-            .actors
-            .iter()
-            .map(|(_, actor)| {
-                let object = ObjectUnmanaged::new(
-                    sprite_loader.get_vram_sprite(actor.tag.animation_sprite(self.frame / 16)),
-                );
-                RenderCache { object }
-            })
-            .collect();
-        self.render_cache
-            .sort_unstable_by_key(|r| r.sorting_number());
-    }
+    //fn cache_render(&mut self, sprite_loader: &mut SpriteLoader) {
+    //    self.render_cache = self
+    //        .actors
+    //        .iter()
+    //        .map(|(_, actor)| {
+    //            let object = ObjectUnmanaged::new(
+    //                sprite_loader.get_vram_sprite(actor.tag.animation_sprite(self.frame / 16)),
+    //            );
+    //            RenderCache { object }
+    //        })
+    //        .collect();
+    //    self.render_cache
+    //        .sort_unstable_by_key(|r| r.sorting_number());
+    //}
 
     pub fn render(&mut self, loader: &mut SpriteLoader, oam: &mut OamIterator) {
-        for item in self.render_cache.iter() {
-            item.render(oam);
-        }
+        //for item in self.render_cache.iter() {
+        //    item.render(oam);
+        //}
 
         for (_, actor) in self.actors.iter() {
-            actor.render(loader, oam, self.scroll_pos, self.frame);
+            if let Some(tag) = actor.tags.get(&actor.state) {
+                let sprite = loader.get_vram_sprite(tag.animation_sprite(self.frame / 10));
+                let mut obj = ObjectUnmanaged::new(sprite);
+                let position = actor.collision_mask.position + self.scroll_pos + actor.sprite_offset;
+                obj.show()
+                    .set_position(Vector2D {
+                        x: position.x.trunc(),
+                        y: position.y.trunc(),
+                    })
+                    .set_hflip(actor.facing == Tri::Negative);
+                if let Some(slot) = oam.next() {
+                    slot.set(&obj);
+                }
+            }
         }
     }
 }
 
+// TODO refactor to use cached rendering
 struct RenderCache {
     object: ObjectUnmanaged,
 }
