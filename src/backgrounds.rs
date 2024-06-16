@@ -1,6 +1,7 @@
-use agb::display::tiled::{BackgroundSize, RegularMap, TiledMap};
-use agb::include_background_gfx;
-use agb::display::tiled::VRamManager;
+use agb::{
+    display::tiled::{RegularMap, VRamManager},
+    include_background_gfx,
+};
 
 include_background_gfx!(backgrounds, "1e151b",
     level => deduplicate "gfx/bg.png",
@@ -32,4 +33,3 @@ pub fn load_level_background(
         }
     }
 }
-

@@ -1,13 +1,15 @@
+use agb::mgba::DebugLevel;
+use crate::Vector2D;
 use crate::{
     actor::{Action, Actor, ActorState},
     game::ActorKey,
     sfx::Sfx,
     util,
 };
-use agb::input::Tri;
+use agb::fixnum::{FixedNum, Num, Number};
 use agb::{
     fixnum::{num, Rect},
-    input::{Button, ButtonController},
+    input::{Button, ButtonController, Tri},
     mgba::Mgba,
 };
 use slotmap::SlotMap;
@@ -17,6 +19,10 @@ pub enum Behavior {
     Input,
     Player,
     Flap,
+}
+
+fn vector_close_to_zero(v: &Vector2D<FixedNum<8>>, precision: FixedNum<8>) -> bool {
+    (v.x < precision && v.x > -precision) && (v.y < precision && v.y > -precision)
 }
 
 impl Behavior {
@@ -30,7 +36,10 @@ impl Behavior {
         collision_rects: &[Rect<i32>],
         sfx: &mut Sfx,
     ) {
-        let logger = Mgba::new();
+        let mut logger = Mgba::new();
+        if input.is_just_pressed(Button::A) {
+        }
+
         match self {
             Self::Input => {
                 if let Some(actor) = actors.get_mut(current_key) {
@@ -114,7 +123,7 @@ impl Behavior {
                         actor.velocity.y = 0.into();
                     }
 
-                    if actor.velocity == (0, 0).into() {
+                    if vector_close_to_zero(&actor.velocity, num!(0.02)) {
                         actor.state = ActorState::Idle;
                     }
 
@@ -141,15 +150,17 @@ impl Behavior {
         }
 
         if let Some(actor) = actors.get(current_key) {
-            logger.and_then(|mut l| {
+            logger.as_mut().and_then(|l| {
                 l.print(
                     format_args!(
-                        "actor_state: {:?} x: {:?} y: {:?}",
+                        "actor_state: {:?} x: {} y: {} vx: {} vy: {}",
                         actor.state,
                         actor.collision_mask.position.x,
-                        actor.collision_mask.position.y
+                        actor.collision_mask.position.y,
+                        actor.velocity.x,
+                        actor.velocity.y,
                     ),
-                    agb::mgba::DebugLevel::Debug,
+                    DebugLevel::Debug,
                 )
                 .ok()
             });

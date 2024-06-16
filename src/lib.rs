@@ -64,36 +64,38 @@ pub fn entry(mut gba: agb::Gba) -> ! {
             TileFormat::FourBpp,
         );
 
-        backgrounds::load_level_background(&mut level_bg1, &mut vram, current_level);
         let level = Level::get_level(current_level);
 
         let mut game = Game::new(level);
-        game.load_level();
-
+        game.load_level_assets();
         loop {
-            writer.next_letter_group();
-            writer.update((0, 0).into());
-            sfx.frame();
-            vblank.wait_for_vblank();
+            backgrounds::load_level_background(&mut level_bg1, &mut vram, current_level);
 
-            let oam = &mut unmanaged.iter();
+            loop {
+                writer.next_letter_group();
+                writer.update((0, 0).into());
+                sfx.frame();
+                vblank.wait_for_vblank();
 
-            game.update(&mut sprite_loader, &mut sfx);
+                let oam = &mut unmanaged.iter();
 
-            // Update scroll
-            let Vector2D { x: sx, y: sy } = game.scroll_pos;
-            if let Ok(sx) = sx.trunc().try_into() {
-                if let Ok(sy) = sy.trunc().try_into() {
-                    level_bg1.set_scroll_pos(-Vector2D { x: sx, y: sy });
+                game.update(&mut sprite_loader, &mut sfx, &mut level_bg1);
+
+                // Update scroll
+                let Vector2D { x: sx, y: sy } = game.scroll_pos;
+                if let Ok(sx) = sx.trunc().try_into() {
+                    if let Ok(sy) = sy.trunc().try_into() {
+                        level_bg1.set_scroll_pos(-Vector2D { x: sx, y: sy });
+                    }
                 }
+
+                level_bg1.commit(&mut vram);
+                level_bg1.show();
+
+                game.render(&mut sprite_loader, oam);
+
+                writer.commit(oam);
             }
-
-            level_bg1.commit(&mut vram);
-            level_bg1.show();
-
-            game.render(&mut sprite_loader, oam);
-
-            writer.commit(oam);
         }
     }
 }
