@@ -7,14 +7,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-agb = "0.18.0"
-#agb_tracker = "0.18.0"
+agb = "0.20"
+agb_tracker = { version = "0.20", features = [ "xm" ] }
 slotmap = { version = "1", default-features = false }
 
 [build-dependencies]
 quote = "1"
 proc-macro2 = "1"
-tiled = { version = "0.11", default-features = false }
+tiled = { version = "0.12", default-features = false }
 
 [profile.dev]
 opt-level = 3

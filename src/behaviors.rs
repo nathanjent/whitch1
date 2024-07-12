@@ -124,6 +124,7 @@ impl Behavior {
                     }
 
                     if vector_close_to_zero(&actor.velocity, num!(0.02)) {
+                        actor.velocity = (0, 0).into();
                         actor.state = ActorState::Idle;
                     }
 
@@ -149,21 +150,21 @@ impl Behavior {
             }
         }
 
-        if let Some(actor) = actors.get(current_key) {
-            logger.as_mut().and_then(|l| {
-                l.print(
-                    format_args!(
-                        "actor_state: {:?} x: {} y: {} vx: {} vy: {}",
-                        actor.state,
-                        actor.collision_mask.position.x,
-                        actor.collision_mask.position.y,
-                        actor.velocity.x,
-                        actor.velocity.y,
-                    ),
-                    DebugLevel::Debug,
-                )
-                .ok()
-            });
-        }
+        //if let Some(actor) = actors.get(current_key) {
+        //    logger.as_mut().and_then(|l| {
+        //        l.print(
+        //            format_args!(
+        //                "actor_state: {:?} x: {} y: {} vx: {} vy: {}",
+        //                actor.state,
+        //                actor.collision_mask.position.x,
+        //                actor.collision_mask.position.y,
+        //                actor.velocity.x,
+        //                actor.velocity.y,
+        //            ),
+        //            DebugLevel::Debug,
+        //        )
+        //        .ok()
+        //    });
+        //}
     }
 }
