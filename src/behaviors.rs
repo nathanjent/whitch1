@@ -47,6 +47,9 @@ impl Behavior {
                     if actor.state != ActorState::Jumping && input.is_just_pressed(Button::B) {
                         actor.current_action = Action::Jump;
                     }
+                    if actor.state == ActorState::Jumping && input.is_just_released(Button::B) {
+                        actor.current_action = Action::JumpCut;
+                    }
                 }
             }
             Self::Flap => {
@@ -117,6 +120,10 @@ impl Behavior {
                         actor.state = ActorState::Jumping;
                         actor.velocity.y -= actor.max_velocity.y;
                         sfx.jump();
+                    }
+
+                    if actor.current_action == Action::JumpCut && actor.velocity.y != 0.into() {
+                        actor.velocity.y = 0.into();
                     }
 
                     if actor.hit_ceiling(collision_rects, num!(0.8)) {
