@@ -17,6 +17,7 @@ pub enum ActorState {
 pub enum Action {
     None,
     Jump,
+    JumpCut,
     Attack,
 }
 

@@ -1,4 +1,4 @@
-use crate::actor::ActorState;
+use agb::display::tiled::MapLoan;
 use crate::behaviors::Behavior;
 use crate::level::EntityType;
 use crate::sfx::Sfx;
@@ -6,14 +6,13 @@ use crate::util::lerp;
 use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::SpriteLoader;
-use agb::display::object::TagMap;
+use agb::display::tiled::RegularMap;
 use agb::display::HEIGHT;
 use agb::display::WIDTH;
 use agb::fixnum::num;
 use agb::fixnum::Num;
 use agb::fixnum::Rect;
 use agb::fixnum::{FixedNum, Vector2D};
-use agb::hash_map::HashMap;
 use agb::input::ButtonController;
 use agb::input::Tri;
 use alloc::vec;
@@ -56,7 +55,7 @@ impl<'a> Game<'a> {
         }
     }
 
-    pub fn load_level(&mut self) {
+    pub fn load_level_assets(&mut self) {
         for Entity(entity, position, maybe_size, behaviors, sprite_offset) in
             self.level.starting_positions
         {
@@ -108,7 +107,7 @@ impl<'a> Game<'a> {
         }
     }
 
-    pub fn update(&mut self, sprite_loader: &mut SpriteLoader, sfx: &mut Sfx) {
+    pub fn update(&mut self, sfx: &mut Sfx) {
         self.input.update();
         self.frame = self.frame.wrapping_add(1);
 
@@ -186,7 +185,8 @@ impl<'a> Game<'a> {
             if let Some(tag) = actor.tags.get(&actor.state) {
                 let sprite = loader.get_vram_sprite(tag.animation_sprite(self.frame / 10));
                 let mut obj = ObjectUnmanaged::new(sprite);
-                let position = actor.collision_mask.position + self.scroll_pos + actor.sprite_offset;
+                let position =
+                    actor.collision_mask.position + self.scroll_pos + actor.sprite_offset;
                 obj.show()
                     .set_position(Vector2D {
                         x: position.x.trunc(),

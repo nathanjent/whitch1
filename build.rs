@@ -6,7 +6,7 @@ use std::io::{BufWriter, Write};
 use std::str::FromStr;
 use tiled::PropertyValue;
 
-const LEVEL_NAMES: &[&str] = &["level1"];
+static LEVEL_NAMES: &[&str] = &["level1", "level2"];
 
 fn main() {
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR environment variable must be specified");
@@ -23,11 +23,11 @@ fn main() {
 
     let tilemaps_output = quote! {
         use agb::display::tiled::TileSetting;
-        pub const LEVELS_MAP: &[&[TileSetting]] = &[#(#levels_tiles),*];
+        pub static LEVELS_MAP: &[&[TileSetting]] = &[#(#levels_tiles),*];
     };
 
     let levels_output = quote! {
-        pub const LEVELS: &[Level] = &[#(#levels_data),*];
+        pub static LEVELS: &[Level] = &[#(#levels_data),*];
     };
 
     {
@@ -150,8 +150,9 @@ impl quote::ToTokens for Entity {
         let offset_y = &self.4 .1;
         let sprite_offset = quote!(Vector2D::new(#offset_x, #offset_y));
 
-        tokens
-            .append_all(quote!(Entity(#entity_type, #location, #size, &[#(#behaviors),*], #sprite_offset)))
+        tokens.append_all(
+            quote!(Entity(#entity_type, #location, #size, &[#(#behaviors),*], #sprite_offset)),
+        )
     }
 }
 

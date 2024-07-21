@@ -5,9 +5,9 @@ use agb::{
     include_aseprite,
 };
 
-pub const FONT: Font = include_font!("fonts/yoster.ttf", 12);
+pub static FONT: Font = include_font!("fonts/yoster.ttf", 12);
 
-const SPRITES: &Graphics = include_aseprite!(
+static SPRITES: &Graphics = include_aseprite!(
     "gfx/whitch_design.aseprite",
     "gfx/enemies.aseprite",
     "gfx/objects.aseprite"
@@ -21,7 +21,7 @@ macro_rules! named_tag {
         ] $(,)?
     ) => {
         $(
-            pub const $name: &agb::display::object::Tag = $sprites.tags().get(stringify!($name));
+            pub static $name: &agb::display::object::Tag = $sprites.tags().get(stringify!($name));
         )+
     };
 }

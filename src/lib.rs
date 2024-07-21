@@ -5,15 +5,6 @@
 #![cfg_attr(test, test_runner(agb::test_runner::test_runner))]
 #![feature(slice_pattern)]
 
-use agb::display::object::ObjectTextRender;
-use agb::display::object::PaletteVram;
-use agb::display::object::Size;
-use agb::display::object::TextAlignment;
-use agb::display::palette16::Palette16;
-use agb::display::tiled::TiledMap;
-use agb::display::WIDTH;
-use agb::fixnum::Vector2D;
-
 use core::fmt::Write;
 
 extern crate alloc;
@@ -27,15 +18,22 @@ mod resources;
 mod sfx;
 mod util;
 
-use agb::display::tiled::RegularBackgroundSize;
-use agb::display::tiled::TileFormat;
-use agb::display::Priority;
+use agb::display::object::ObjectTextRender;
+use agb::display::object::PaletteVram;
+use agb::display::object::Size;
+use agb::display::object::TextAlignment;
+use agb::display::palette16::Palette16;
+use agb::display::WIDTH;
+use agb::fixnum::Vector2D;
 use agb::interrupt::VBlank;
+use agb::mgba::Mgba;
 use agb::sound::mixer::Frequency;
+
 use game::Game;
 use level::Level;
 
 pub fn entry(mut gba: agb::Gba) -> ! {
+    let mut logger = Mgba::new();
     let vblank = VBlank::get();
     let (mut unmanaged, mut sprite_loader) = gba.display.object.get_unmanaged();
 
@@ -43,6 +41,7 @@ pub fn entry(mut gba: agb::Gba) -> ! {
     mixer.enable();
 
     let mut sfx = sfx::Sfx::new(&mut mixer);
+    //sfx.crawl();
 
     let (tiled, mut vram) = gba.display.video.tiled0();
 
@@ -54,42 +53,46 @@ pub fn entry(mut gba: agb::Gba) -> ! {
     let palette = PaletteVram::new(&palette).unwrap();
     let mut writer = ObjectTextRender::new(&resources::FONT, Size::S16x16, palette);
     let _ = writeln!(writer, "Hello, World!");
-    writer.layout((WIDTH, 40).into(), TextAlignment::Left, 2);
+    writer.layout((WIDTH, 40), TextAlignment::Left, 2);
 
-    let current_level = 0;
+    let current_level = 1;
+
     loop {
-        let mut level_bg1 = tiled.background(
-            Priority::P1,
-            RegularBackgroundSize::Background64x32,
-            TileFormat::FourBpp,
-        );
-
-        backgrounds::load_level_background(&mut level_bg1, &mut vram, current_level);
         let level = Level::get_level(current_level);
+        let mut bg2 = backgrounds::load_backgrounds(current_level, level, &tiled);
+
+        let mut between_updates = || {
+            sfx.frame();
+            vblank.wait_for_vblank();
+        };
+
+        let start_pos = (0, 0).into();
+        bg2.init(&mut vram, start_pos, &mut between_updates);
+        bg2.commit(&mut vram);
+        bg2.set_visible(true);
 
         let mut game = Game::new(level);
-        game.load_level();
+        game.load_level_assets();
 
         loop {
             writer.next_letter_group();
-            writer.update((0, 0).into());
+            writer.update((0, 0));
             sfx.frame();
+
             vblank.wait_for_vblank();
+            bg2.commit(&mut vram);
 
             let oam = &mut unmanaged.iter();
 
-            game.update(&mut sprite_loader, &mut sfx);
+            game.update(&mut sfx);
 
             // Update scroll
             let Vector2D { x: sx, y: sy } = game.scroll_pos;
             if let Ok(sx) = sx.trunc().try_into() {
                 if let Ok(sy) = sy.trunc().try_into() {
-                    level_bg1.set_scroll_pos(-Vector2D { x: sx, y: sy });
+                    bg2.set_pos(&mut vram, -Vector2D { x: sx, y: sy });
                 }
             }
-
-            level_bg1.commit(&mut vram);
-            level_bg1.show();
 
             game.render(&mut sprite_loader, oam);
 
