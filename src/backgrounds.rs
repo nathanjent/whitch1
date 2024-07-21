@@ -1,8 +1,13 @@
-use crate::Vector2D;
+use crate::level::Level;
+use agb::display::tiled::InfiniteScrolledMap;
+use agb::display::tiled::TileFormat;
+use agb::display::tiled::Tiled0;
+use agb::display::Priority;
 use agb::{
-    display::tiled::{RegularBackgroundSize, RegularMap, TiledMap, VRamManager},
+    display::tiled::{RegularBackgroundSize, VRamManager},
     include_background_gfx,
 };
+use alloc::boxed::Box;
 
 include_background_gfx!(backgrounds, "1e151b",
     level => deduplicate "gfx/bg.png",
@@ -17,52 +22,29 @@ pub fn load_palettes(vram_manager: &mut VRamManager) {
     vram_manager.set_background_palettes(backgrounds::PALETTES);
 }
 
-/// The 4 quadrants to load map tile data into vram.
-///
-/// | 0 | 1 |
-/// | 2 | 3 |
-pub enum ScreenBlock {
-    B0,
-    B1,
-    B2,
-    B3,
-}
-
-pub fn load_level_background(
-    map: &mut RegularMap,
-    vram_manager: &mut VRamManager,
+pub fn load_backgrounds<'a>(
     level_number: usize,
-    tilemap_offset: Vector2D<u16>,
-    screen_block: ScreenBlock,
-) {
+    level: &'a Level,
+    tiled: &'a Tiled0,
+) -> InfiniteScrolledMap<'a> {
     let level_map = tilemaps::LEVELS_MAP[level_number];
     let level_tileset = &backgrounds::level.tiles;
 
-    // Tiles can only be loaded into one of 4 screen blocks
-    // The screen block may not display correctly if the background size isn't set to match
-    let (x1, x2, y1, y2) = match screen_block {
-        ScreenBlock::B0 => (0u16, 32, 0, 32),
-        ScreenBlock::B1 => (32, 64, 0, 32),
-        ScreenBlock::B2 => (0, 32, 32, 64),
-        ScreenBlock::B3 => (32, 64, 32, 64),
-    };
-
-    for y in y1..y2 {
-        for x in x1..x2 {
-            let (tile_x, tile_y) = match screen_block {
-                ScreenBlock::B0 => (x + tilemap_offset.x, y + tilemap_offset.y),
-                ScreenBlock::B1 => (x + tilemap_offset.x + 32, y + tilemap_offset.y),
-                ScreenBlock::B2 => (x + tilemap_offset.x, y + tilemap_offset.y + 32),
-                ScreenBlock::B3 => (x + tilemap_offset.x + 32, y + tilemap_offset.y + 32),
-            };
-            let tile_pos = (tile_y * 32 + tile_x) as usize;
-            if tile_pos >= level_map.len() {
-                return;
+    let background = InfiniteScrolledMap::new(
+        tiled.background(
+            Priority::P2,
+            RegularBackgroundSize::Background32x32,
+            TileFormat::FourBpp,
+        ),
+        Box::new(|pos| {
+            let index = (pos.x + level.width as i32 * pos.y) as usize;
+            if index < level_map.len() {
+                (level_tileset, level_map[index])
+            } else {
+                (level_tileset, level_map[0])
             }
+        }),
+    );
 
-            let tile_setting = level_map[tile_pos];
-
-            map.set_tile(vram_manager, (x, y), &level_tileset, tile_setting);
-        }
-    }
+    background
 }

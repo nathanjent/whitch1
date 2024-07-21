@@ -23,19 +23,12 @@ use agb::display::object::PaletteVram;
 use agb::display::object::Size;
 use agb::display::object::TextAlignment;
 use agb::display::palette16::Palette16;
-use agb::display::tiled::RegularBackgroundSize;
-use agb::display::tiled::TileFormat;
-use agb::display::tiled::TiledMap;
-use agb::display::Priority;
 use agb::display::WIDTH;
-use agb::fixnum::Rect;
 use agb::fixnum::Vector2D;
 use agb::interrupt::VBlank;
-use agb::mgba::DebugLevel;
 use agb::mgba::Mgba;
 use agb::sound::mixer::Frequency;
 
-use backgrounds::ScreenBlock;
 use game::Game;
 use level::Level;
 
@@ -62,71 +55,48 @@ pub fn entry(mut gba: agb::Gba) -> ! {
     let _ = writeln!(writer, "Hello, World!");
     writer.layout((WIDTH, 40), TextAlignment::Left, 2);
 
-    let current_level = 0;
-    loop {
-        let mut bg_map01 = tiled.background(
-            Priority::P1,
-            RegularBackgroundSize::Background64x32,
-            TileFormat::FourBpp,
-        );
+    let current_level = 1;
 
+    loop {
         let level = Level::get_level(current_level);
+        let mut bg2 = backgrounds::load_backgrounds(current_level, level, &tiled);
+
+        let mut between_updates = || {
+            sfx.frame();
+            vblank.wait_for_vblank();
+        };
+
+        let start_pos = (0, 0).into();
+        bg2.init(&mut vram, start_pos, &mut between_updates);
+        bg2.commit(&mut vram);
+        bg2.set_visible(true);
 
         let mut game = Game::new(level);
         game.load_level_assets();
 
         loop {
-            backgrounds::load_level_background(
-                &mut bg_map01,
-                &mut vram, current_level,
-                (0u16, 0u16).into(),
-                ScreenBlock::B0,
-            );
+            writer.next_letter_group();
+            writer.update((0, 0));
+            sfx.frame();
 
-            loop {
-                writer.next_letter_group();
-                writer.update((0, 0));
-                sfx.frame();
+            vblank.wait_for_vblank();
+            bg2.commit(&mut vram);
 
-                vblank.wait_for_vblank();
+            let oam = &mut unmanaged.iter();
 
-                let oam = &mut unmanaged.iter();
+            game.update(&mut sfx);
 
-                game.update(&mut sprite_loader, &mut sfx, &mut bg_map01);
-
-                // Update scroll
-                let Vector2D { x: sx, y: sy } = game.scroll_pos;
-                if let Ok(sx) = sx.trunc().try_into() {
-                    if let Ok(sy) = sy.trunc().try_into() {
-                        bg_map01.set_scroll_pos(-Vector2D { x: sx, y: sy });
-                    }
-                }
-
-                bg_map01.commit(&mut vram);
-                bg_map01.set_visible(true);
-
-                game.render(&mut sprite_loader, oam);
-
-                writer.commit(oam);
-                logger.as_mut().and_then(|l| {
-                    l.print(
-                        format_args!("scroll_pos: {:?}", bg_map01.scroll_pos()),
-                        DebugLevel::Debug,
-                    )
-                    .ok()
-                });
-
-                let Vector2D { x: sx, y: sy } = bg_map01.scroll_pos();
-                let bx = sx % (32 * 8);
-                let by = sy % (32 * 8);
-                logger.as_mut().and_then(|l| {
-                    l.print(format_args!("bx: {} by: {}", bx, by), DebugLevel::Debug)
-                        .ok()
-                });
-
-                if bx > 4 && bx < 8 {
+            // Update scroll
+            let Vector2D { x: sx, y: sy } = game.scroll_pos;
+            if let Ok(sx) = sx.trunc().try_into() {
+                if let Ok(sy) = sy.trunc().try_into() {
+                    bg2.set_pos(&mut vram, -Vector2D { x: sx, y: sy });
                 }
             }
+
+            game.render(&mut sprite_loader, oam);
+
+            writer.commit(oam);
         }
     }
 }

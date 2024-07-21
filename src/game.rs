@@ -107,7 +107,7 @@ impl<'a> Game<'a> {
         }
     }
 
-    pub fn update(&mut self, sprite_loader: &mut SpriteLoader, sfx: &mut Sfx, bg: &mut MapLoan<RegularMap>) {
+    pub fn update(&mut self, sfx: &mut Sfx) {
         self.input.update();
         self.frame = self.frame.wrapping_add(1);
 
