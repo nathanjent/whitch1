@@ -24,6 +24,7 @@ use agb::display::object::Size;
 use agb::display::object::TextAlignment;
 use agb::display::palette16::Palette16;
 use agb::display::WIDTH;
+use agb::fixnum::num;
 use agb::fixnum::Vector2D;
 use agb::interrupt::VBlank;
 use agb::mgba::Mgba;
@@ -59,7 +60,7 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
     loop {
         let level = Level::get_level(current_level);
-        let mut bg2 = backgrounds::load_backgrounds(current_level, level, &tiled);
+        let (mut bg2, mut bg3) = backgrounds::load_backgrounds(current_level, level, &tiled);
 
         let mut between_updates = || {
             sfx.frame();
@@ -68,8 +69,13 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
         let start_pos = (0, 0).into();
         bg2.init(&mut vram, start_pos, &mut between_updates);
+        bg3.init(&mut vram, start_pos, &mut between_updates);
+
         bg2.commit(&mut vram);
+        bg3.commit(&mut vram);
+
         bg2.set_visible(true);
+        bg3.set_visible(true);
 
         let mut game = Game::new(level);
         game.load_level_assets();
@@ -81,6 +87,7 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
             vblank.wait_for_vblank();
             bg2.commit(&mut vram);
+            bg3.commit(&mut vram);
 
             let oam = &mut unmanaged.iter();
 
@@ -88,9 +95,14 @@ pub fn entry(mut gba: agb::Gba) -> ! {
 
             // Update scroll
             let Vector2D { x: sx, y: sy } = game.scroll_pos;
-            if let Ok(sx) = sx.trunc().try_into() {
-                if let Ok(sy) = sy.trunc().try_into() {
-                    bg2.set_pos(&mut vram, -Vector2D { x: sx, y: sy });
+            if let Ok(sx2) = sx.trunc().try_into() {
+                if let Ok(sy2) = sy.trunc().try_into() {
+                    bg2.set_pos(&mut vram, -Vector2D { x: sx2, y: sy2 });
+                }
+            }
+            if let Ok(sx3) = (sx * num!(0.6)).trunc().try_into() {
+                if let Ok(sy3) = (sy * num!(0.8)).trunc().try_into() {
+                    bg3.set_pos(&mut vram, -Vector2D { x: sx3, y: sy3 });
                 }
             }
 

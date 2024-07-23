@@ -26,11 +26,12 @@ pub fn load_backgrounds<'a>(
     level_number: usize,
     level: &'a Level,
     tiled: &'a Tiled0,
-) -> InfiniteScrolledMap<'a> {
-    let level_map = tilemaps::LEVELS_MAP[level_number];
+) -> (InfiniteScrolledMap<'a>, InfiniteScrolledMap<'a>) {
+    let level_layers = tilemaps::LEVEL_LAYER_TILESETTINGS[level_number];
     let level_tileset = &backgrounds::level.tiles;
 
-    let background = InfiniteScrolledMap::new(
+    let bg2_layer = level_layers[0];
+    let bg2 = InfiniteScrolledMap::new(
         tiled.background(
             Priority::P2,
             RegularBackgroundSize::Background32x32,
@@ -38,13 +39,30 @@ pub fn load_backgrounds<'a>(
         ),
         Box::new(|pos| {
             let index = (pos.x + level.width as i32 * pos.y) as usize;
-            if index < level_map.len() {
-                (level_tileset, level_map[index])
+            if index < bg2_layer.len() {
+                (level_tileset, bg2_layer[index])
             } else {
-                (level_tileset, level_map[0])
+                (level_tileset, bg2_layer[0])
             }
         }),
     );
 
-    background
+    let bg3_layer = level_layers[1];
+    let bg3 = InfiniteScrolledMap::new(
+        tiled.background(
+            Priority::P3,
+            RegularBackgroundSize::Background32x32,
+            TileFormat::FourBpp,
+        ),
+        Box::new(|pos| {
+            let index = (pos.x + level.width as i32 * pos.y) as usize;
+            if index < bg3_layer.len() {
+                (level_tileset, bg3_layer[index])
+            } else {
+                (level_tileset, bg3_layer[0])
+            }
+        }),
+    );
+
+    (bg2, bg3)
 }

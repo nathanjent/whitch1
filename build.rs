@@ -23,7 +23,7 @@ fn main() {
 
     let tilemaps_output = quote! {
         use agb::display::tiled::TileSetting;
-        pub static LEVELS_MAP: &[&[TileSetting]] = &[#(#levels_tiles),*];
+        pub static LEVEL_LAYER_TILESETTINGS: &[&[&[TileSetting]]] = &[#(#levels_tiles),*];
     };
 
     let levels_output = quote! {
@@ -48,7 +48,7 @@ fn main() {
 
 fn load_level<'a>(loader: &'a mut tiled::Loader, filename: &'a str) -> (TokenStream, Level) {
     let level_map = load_tmx(loader, filename);
-    let tiles = export_tiles(&level_map, quote!(level));
+    let tiles = export_backgrounds(&level_map, quote!(level));
     let data = export_level(&level_map);
 
     (tiles, data)
@@ -190,15 +190,22 @@ impl<'a> quote::ToTokens for Level {
     }
 }
 
-fn export_tiles(map: &tiled::Map, background: TokenStream) -> TokenStream {
-    let ground_layer = map
-        .layers()
-        .find(|l| l.name == "ground")
-        .expect("The ground layer should exist");
+fn export_backgrounds(map: &tiled::Map, level: TokenStream) -> TokenStream {
+    let ground_tiles = export_tiles(map, "ground".to_owned(), &level);
+    let bg_tiles = export_tiles(map, "bg".to_owned(), &level);
 
-    let map_tiles = ground_layer
+    quote! {&[#ground_tiles, #bg_tiles]}
+}
+
+fn export_tiles(map: &tiled::Map, layer_name: String, level: &TokenStream) -> TokenStream {
+    let layer = map
+        .layers()
+        .find(|l| l.name == layer_name)
+        .expect(format!("The {} layer should exist", layer_name).as_str());
+
+    let map_tiles = layer
         .as_tile_layer()
-        .expect("The ground layer should be a tile layer");
+        .expect(format!("The {} layer should be a tile layer", layer_name).as_str());
 
     let width = map_tiles.width().expect("Map should be finite");
     let height = map_tiles.height().unwrap();
@@ -215,7 +222,7 @@ fn export_tiles(map: &tiled::Map, background: TokenStream) -> TokenStream {
                     let hflip = tile.flip_h;
 
                     quote! {
-                        backgrounds::#background.tile_settings[#tile_id as usize]
+                        backgrounds::#level.tile_settings[#tile_id as usize]
                             .hflip(#hflip)
                             .vflip(#vflip)
                     }

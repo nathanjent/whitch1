@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.11" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="240" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="5" nextobjectid="87">
+<map version="1.11" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="240" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="5" nextobjectid="89">
  <properties>
   <property name="NAME" value="Level 2 - Changes"/>
  </properties>
@@ -11,20 +11,14 @@
  </layer>
  <layer id="1" name="ground" width="240" height="32">
   <data encoding="base64" compression="zlib">
-   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
+   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
   </data>
  </layer>
  <objectgroup id="3" name="collision">
-  <object id="2" type="COLLISION" x="34.8333" y="81.8333" width="177.333" height="58.5"/>
-  <object id="4" type="COLLISION" x="115" y="74.5" width="34" height="16.5"/>
-  <object id="35" type="COLLISION" x="114.5" y="141" width="50.75" height="13.625"/>
   <object id="44" type="COLLISION" x="-5.16667" y="-0.333333" width="40.0833" height="197.625"/>
-  <object id="6" type="COLLISION" x="170.5" y="74.5" width="24" height="8.20833"/>
-  <object id="7" type="COLLISION" x="194.5" y="66" width="33.5" height="50"/>
-  <object id="8" type="COLLISION" x="218.667" y="58" width="18.3333" height="44.5"/>
-  <object id="9" type="COLLISION" x="274.667" y="99" width="10.3333" height="17"/>
-  <object id="86" type="COLLISION" x="35.0003" y="73.6667" width="10.3333" height="8.33333"/>
   <object id="14" type="COLLISION" x="330.5" y="146" width="12" height="13"/>
+  <object id="87" type="COLLISION" x="163.5" y="154.545" width="171" height="13"/>
+  <object id="88" type="COLLISION" x="24" y="162.5" width="171" height="13"/>
   <object id="15" type="COLLISION" x="339" y="138" width="12" height="13"/>
   <object id="16" type="COLLISION" x="347" y="130.5" width="12" height="13"/>
   <object id="17" type="COLLISION" x="355.5" y="121.5" width="23.5" height="13"/>
@@ -43,7 +37,7 @@
   <object id="84" type="COLLISION" x="980" y="154.167" width="80.6667" height="10.3333"/>
   <object id="85" type="COLLISION" x="1004.33" y="162.167" width="30.6667" height="10.3333"/>
   <object id="43" type="COLLISION" x="960.333" y="76.1667" width="20.6667" height="15.6667"/>
-  <object id="34" type="COLLISION" x="707.5" y="138.5" width="18" height="17.5"/>
+  <object id="34" type="COLLISION" x="707.5" y="138.5" width="11" height="17.5"/>
   <object id="47" type="COLLISION" x="724.5" y="170.167" width="8.66667" height="16.5"/>
   <object id="48" type="COLLISION" x="732.5" y="178.167" width="8.66667" height="16.5"/>
   <object id="49" type="COLLISION" x="740.5" y="186.167" width="8.66667" height="16.5"/>
@@ -91,14 +85,10 @@
   <object id="29" type="COLLISION" x="635" y="82" width="41" height="25"/>
   <object id="30" type="COLLISION" x="651" y="66.5" width="24.5" height="25"/>
   <object id="31" type="COLLISION" x="658.5" y="58.5" width="72.5" height="10.5"/>
-  <object id="11" type="COLLISION" x="222" y="82.5" width="23" height="11"/>
-  <object id="12" type="COLLISION" x="164" y="154" width="179.5" height="11"/>
   <object id="13" type="COLLISION" x="371" y="114.5" width="138" height="11"/>
-  <object id="10" type="COLLISION" x="250.667" y="107.333" width="10.5" height="9.33333"/>
-  <object id="3" type="COLLISION" x="-0.18182" y="90.2727" width="276.803" height="17.6818"/>
  </objectgroup>
  <objectgroup id="2" name="entities">
-  <object id="1" name="PLAYER" type="ENTITY" x="132.333" y="39" width="16" height="32">
+  <object id="1" name="PLAYER" type="ENTITY" x="239.333" y="121" width="16" height="32">
    <properties>
     <property name="behaviors">Input
 Player</property>
@@ -106,6 +96,6 @@ Player</property>
     <property name="offset_y" type="int" value="0"/>
    </properties>
   </object>
-  <object id="46" name="DOOR" type="ENTITY" x="53.3333" y="65.875" width="16" height="16"/>
+  <object id="46" name="DOOR" type="ENTITY" x="177.333" y="151.875" width="16" height="16" rotation="-90"/>
  </objectgroup>
 </map>
