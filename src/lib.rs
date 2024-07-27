@@ -16,6 +16,7 @@ mod game;
 mod level;
 mod resources;
 mod sfx;
+mod close_to_zero;
 mod util;
 
 use agb::display::object::ObjectTextRender;

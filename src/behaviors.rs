@@ -1,28 +1,23 @@
 use agb::mgba::DebugLevel;
-use crate::Vector2D;
 use crate::{
     actor::{Action, Actor, ActorState},
     game::ActorKey,
     sfx::Sfx,
     util,
 };
-use agb::fixnum::{FixedNum, Num, Number};
 use agb::{
     fixnum::{num, Rect},
     input::{Button, ButtonController, Tri},
     mgba::Mgba,
 };
 use slotmap::SlotMap;
+use crate::close_to_zero::CloseToZero;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum Behavior {
     Input,
     Player,
     Flap,
-}
-
-fn vector_close_to_zero(v: &Vector2D<FixedNum<8>>, precision: FixedNum<8>) -> bool {
-    (v.x < precision && v.x > -precision) && (v.y < precision && v.y > -precision)
 }
 
 impl Behavior {
@@ -111,12 +106,6 @@ impl Behavior {
                     }
 
                     if actor.current_action == Action::Jump && actor.velocity.y == 0.into() {
-                        // jump
-                        // v_0 = (2 * h * v_x) / x_h
-                        // g = (-2 * h * v_x^2) / x_h^2
-                        //
-                        // pos += vel * dt + 0.5 * acc * dt * dt
-                        // vel += acc * dt
                         actor.state = ActorState::Jumping;
                         actor.velocity.y -= actor.max_velocity.y;
                         sfx.jump();
@@ -130,7 +119,7 @@ impl Behavior {
                         actor.velocity.y = 0.into();
                     }
 
-                    if vector_close_to_zero(&actor.velocity, num!(0.02)) {
+                    if actor.velocity.close_to_zero(num!(0.02)) {
                         actor.velocity = (0, 0).into();
                         actor.state = ActorState::Idle;
                     }
@@ -157,21 +146,21 @@ impl Behavior {
             }
         }
 
-        //if let Some(actor) = actors.get(current_key) {
-        //    logger.as_mut().and_then(|l| {
-        //        l.print(
-        //            format_args!(
-        //                "actor_state: {:?} x: {} y: {} vx: {} vy: {}",
-        //                actor.state,
-        //                actor.collision_mask.position.x,
-        //                actor.collision_mask.position.y,
-        //                actor.velocity.x,
-        //                actor.velocity.y,
-        //            ),
-        //            DebugLevel::Debug,
-        //        )
-        //        .ok()
-        //    });
-        //}
+        if let Some(actor) = actors.get(current_key) {
+            logger.as_mut().and_then(|l| {
+                l.print(
+                    format_args!(
+                        "actor_state: {:?} x: {} y: {} vx: {} vy: {}",
+                        actor.state,
+                        actor.collision_mask.position.x,
+                        actor.collision_mask.position.y,
+                        actor.velocity.x,
+                        actor.velocity.y,
+                    ),
+                    DebugLevel::Debug,
+                )
+                .ok()
+            });
+        }
     }
 }
