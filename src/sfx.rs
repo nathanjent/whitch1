@@ -1,7 +1,7 @@
-use agb_tracker::Track;
-use agb_tracker::include_xm;
 use agb::rng;
 use agb::sound::mixer::{ChannelId, Mixer, SoundChannel};
+use agb_tracker::include_xm;
+use agb_tracker::Track;
 use agb_tracker::Tracker;
 use alloc::vec::Vec;
 
@@ -33,7 +33,7 @@ impl<'a> Sfx<'a> {
         }
         self.mixer.frame();
     }
-    
+
     pub fn tink(&mut self) {
         // We can play a sample
         if let Some(sample) = CRAWL_XM.samples.first() {

@@ -1,17 +1,18 @@
-use agb::mgba::DebugLevel;
+use crate::close_to_zero::CloseToZero;
+use crate::Level;
 use crate::{
     actor::{Action, Actor, ActorState},
     game::ActorKey,
     sfx::Sfx,
     util,
 };
+use agb::mgba::DebugLevel;
 use agb::{
-    fixnum::{num, Rect},
+    fixnum::num,
     input::{Button, ButtonController, Tri},
     mgba::Mgba,
 };
 use slotmap::SlotMap;
-use crate::close_to_zero::CloseToZero;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum Behavior {
@@ -28,12 +29,11 @@ impl Behavior {
         enemies_keys: &[ActorKey],
         actors: &mut SlotMap<ActorKey, Actor>,
         input: &ButtonController,
-        collision_rects: &[Rect<i32>],
+        level: &Level,
         sfx: &mut Sfx,
     ) {
         let mut logger = Mgba::new();
-        if input.is_just_pressed(Button::A) {
-        }
+        if input.is_just_pressed(Button::A) {}
 
         match self {
             Self::Input => {
@@ -92,11 +92,11 @@ impl Behavior {
                             util::lerp(actor.velocity.x, 0.into(), actor.acceleration.x)
                     }
 
-                    if actor.hit_wall(collision_rects, num!(3.0)) {
+                    if actor.hit_wall(&level.get_solid_collision_rects(), num!(3.0)) {
                         actor.velocity.x = 0.into();
                     }
 
-                    if actor.hit_ground(collision_rects, num!(0.8)) {
+                    if actor.hit_ground(&level.get_solid_collision_rects(), num!(0.8)) {
                         actor.velocity.y = 0.into();
                         if actor.state == ActorState::Jumping {
                             actor.state = ActorState::Idle;
@@ -115,7 +115,7 @@ impl Behavior {
                         actor.velocity.y = 0.into();
                     }
 
-                    if actor.hit_ceiling(collision_rects, num!(0.8)) {
+                    if actor.hit_ceiling(&level.get_solid_collision_rects(), num!(0.8)) {
                         actor.velocity.y = 0.into();
                     }
 
@@ -143,24 +143,41 @@ impl Behavior {
                         actor.take_damage();
                     }
                 }
+
+                if let Some(actor) = actors.get_mut(current_key) {
+                    logger.as_mut().and_then(|l| {
+                        l.print(
+                            format_args!(
+                                "player_state: {:?} x: {} y: {} vx: {} vy: {}",
+                                actor.state,
+                                actor.collision_mask.position.x,
+                                actor.collision_mask.position.y,
+                                actor.velocity.x,
+                                actor.velocity.y,
+                            ),
+                            DebugLevel::Debug,
+                        )
+                        .ok()
+                    });
+                }
             }
         }
 
-        if let Some(actor) = actors.get(current_key) {
-            logger.as_mut().and_then(|l| {
-                l.print(
-                    format_args!(
-                        "actor_state: {:?} x: {} y: {} vx: {} vy: {}",
-                        actor.state,
-                        actor.collision_mask.position.x,
-                        actor.collision_mask.position.y,
-                        actor.velocity.x,
-                        actor.velocity.y,
-                    ),
-                    DebugLevel::Debug,
-                )
-                .ok()
-            });
-        }
+        //if let Some(actor) = actors.get(current_key) {
+        //    logger.as_mut().and_then(|l| {
+        //        l.print(
+        //            format_args!(
+        //                "actor_state: {:?} x: {} y: {} vx: {} vy: {}",
+        //                actor.state,
+        //                actor.collision_mask.position.x,
+        //                actor.collision_mask.position.y,
+        //                actor.velocity.x,
+        //                actor.velocity.y,
+        //            ),
+        //            DebugLevel::Debug,
+        //        )
+        //        .ok()
+        //    });
+        //}
     }
 }

@@ -1,9 +1,6 @@
 use agb::display::Font;
 use agb::include_font;
-use agb::{
-    display::object::Graphics,
-    include_aseprite,
-};
+use agb::{display::object::Graphics, include_aseprite};
 
 pub static FONT: Font = include_font!("fonts/yoster.ttf", 12);
 
@@ -26,14 +23,4 @@ macro_rules! named_tag {
     };
 }
 
-named_tag!(
-    SPRITES,
-    [
-        W_IDLE,
-        W_RUN,
-        W_JUMP,
-        BAT,
-        DOOR,
-    ]
-);
-
+named_tag!(SPRITES, [W_IDLE, W_RUN, W_JUMP, BAT,]);

@@ -4,12 +4,12 @@ use agb::{
     fixnum::{Rect, Vector2D},
     hash_map::HashMap,
 };
+use alloc::vec::Vec;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum EntityType {
     Player,
     Bat,
-    Door,
 }
 
 impl EntityType {
@@ -23,9 +23,6 @@ impl EntityType {
             }
             EntityType::Bat => {
                 tags.insert(ActorState::Idle, resources::BAT);
-            }
-            EntityType::Door => {
-                tags.insert(ActorState::Idle, resources::DOOR);
             }
         }
 
@@ -46,7 +43,12 @@ pub struct Level {
     pub height: u32,
     pub starting_positions: &'static [Entity],
     pub name: &'static str,
-    pub collision_rects: &'static [Rect<i32>],
+    pub collision_rects: &'static [CollisionRect],
+}
+
+pub enum CollisionRect {
+    Solid(Rect<i32>),
+    Door(Rect<i32>),
 }
 
 impl Level {
@@ -56,7 +58,7 @@ impl Level {
         height: u32,
         starting_positions: &'static [Entity],
         name: &'static str,
-        collision_rects: &'static [Rect<i32>],
+        collision_rects: &'static [CollisionRect],
     ) -> Self {
         Self {
             width,
@@ -67,6 +69,26 @@ impl Level {
         }
     }
 
+    pub fn get_solid_collision_rects(&self) -> Vec<Rect<i32>> {
+        self.collision_rects
+            .iter()
+            .filter_map(|r| match r {
+                CollisionRect::Solid(rect) => Some(*rect),
+                _ => None,
+            })
+            .collect()
+    }
+
+    pub fn get_door_collision_rects(&self) -> Vec<Rect<i32>> {
+        self.collision_rects
+            .iter()
+            .filter_map(|r| match r {
+                CollisionRect::Door(rect) => Some(*rect),
+                _ => None,
+            })
+            .collect()
+    }
+
     pub fn get_level(level_number: usize) -> &'static Level {
         &levels::LEVELS[level_number]
     }
@@ -74,7 +96,7 @@ impl Level {
 
 mod levels {
     use crate::behaviors::Behavior;
-    use crate::level::Level;
+    use crate::level::{CollisionRect, Level};
     use crate::level::{Entity, EntityType};
     use agb::fixnum::{Rect, Vector2D};
 

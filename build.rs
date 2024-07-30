@@ -62,7 +62,6 @@ fn load_tmx(loader: &mut tiled::Loader, filename: &str) -> tiled::Map {
 enum EntityType {
     Player,
     Bat,
-    Door,
 }
 
 impl FromStr for EntityType {
@@ -74,7 +73,6 @@ impl FromStr for EntityType {
         Ok(match s {
             "PLAYER" => Player,
             "BAT" => Bat,
-            "DOOR" => Door,
             _ => return Err(()),
         })
     }
@@ -87,7 +85,6 @@ impl quote::ToTokens for EntityType {
         tokens.append_all(match self {
             Bat => quote!(EntityType::Bat),
             Player => quote!(EntityType::Player),
-            Door => quote!(EntityType::Door),
         })
     }
 }
@@ -132,7 +129,13 @@ struct Entity(
     Vec<Behavior>,
     (i32, i32),
 );
+
 struct CollisionRect((i32, i32), (i32, i32));
+
+enum CollisionShape {
+    Solid(CollisionRect),
+    Door(CollisionRect),
+}
 
 impl quote::ToTokens for Entity {
     fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -190,6 +193,19 @@ impl<'a> quote::ToTokens for Level {
     }
 }
 
+impl<'a> quote::ToTokens for CollisionShape {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            CollisionShape::Solid(collision_rect) => tokens.append_all(quote! {
+                CollisionRect::Solid(#collision_rect)
+            }),
+            CollisionShape::Door(collision_rect) => tokens.append_all(quote! {
+                CollisionRect::Door(#collision_rect)
+            }),
+        }
+    }
+}
+
 fn export_backgrounds(map: &tiled::Map, level: TokenStream) -> TokenStream {
     let ground_tiles = export_tiles(map, "ground".to_owned(), &level);
     let bg_tiles = export_tiles(map, "bg".to_owned(), &level);
@@ -241,7 +257,7 @@ struct Level {
     height: u32,
     starting_positions: Vec<Entity>,
     name: String,
-    collision_rects: Vec<CollisionRect>,
+    collision_rects: Vec<CollisionShape>,
 }
 
 fn export_level(map: &tiled::Map) -> Level {
@@ -321,9 +337,18 @@ fn export_level(map: &tiled::Map) -> Level {
     let collision_rects = collision_layer
         .objects()
         .into_iter()
-        .map(|obj| match obj.shape {
-            tiled::ObjectShape::Rect { width, height } => {
-                CollisionRect((obj.x as i32, obj.y as i32), (width as i32, height as i32))
+        .map(|obj| match (&obj.shape, obj.user_type.as_str()) {
+            (tiled::ObjectShape::Rect { width, height }, "DOOR") => {
+                CollisionShape::Door(CollisionRect(
+                    (obj.x as i32, obj.y as i32),
+                    (*width as i32, *height as i32),
+                ))
+            }
+            (tiled::ObjectShape::Rect { width, height }, _) => {
+                CollisionShape::Solid(CollisionRect(
+                    (obj.x as i32, obj.y as i32),
+                    (*width as i32, *height as i32),
+                ))
             }
             _ => panic!("expected rectangles only"),
         })

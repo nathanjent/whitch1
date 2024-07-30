@@ -82,11 +82,7 @@ impl<'a> Actor<'a> {
         (x, y, x + width, y + height)
     }
 
-    pub fn hit_ground(
-        &self,
-        collision_rects: &[Rect<i32>],
-        sampling: Number,
-    ) -> bool {
+    pub fn hit_ground(&self, collision_rects: &[Rect<i32>], sampling: Number) -> bool {
         collision_rects.iter().any(|Rect { position, size }| {
             let position = *position;
             let size = *size;
@@ -107,11 +103,7 @@ impl<'a> Actor<'a> {
         })
     }
 
-    pub fn hit_ceiling(
-        &self,
-        collision_rects: &[Rect<i32>],
-        sampling: Number,
-    ) -> bool {
+    pub fn hit_ceiling(&self, collision_rects: &[Rect<i32>], sampling: Number) -> bool {
         collision_rects.iter().any(|Rect { position, size }| {
             let position = *position;
             let size = *size;
@@ -132,11 +124,7 @@ impl<'a> Actor<'a> {
         })
     }
 
-    pub fn hit_wall(
-        &self,
-        collision_rects: &[Rect<i32>],
-        sampling: Number,
-    ) -> bool {
+    pub fn hit_wall(&self, collision_rects: &[Rect<i32>], sampling: Number) -> bool {
         collision_rects.iter().any(|Rect { position, size }| {
             let position = *position;
             let size = *size;

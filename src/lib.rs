@@ -12,11 +12,11 @@ extern crate alloc;
 mod actor;
 mod backgrounds;
 mod behaviors;
+mod close_to_zero;
 mod game;
 mod level;
 mod resources;
 mod sfx;
-mod close_to_zero;
 mod util;
 
 use agb::display::object::ObjectTextRender;
@@ -25,7 +25,6 @@ use agb::display::object::Size;
 use agb::display::object::TextAlignment;
 use agb::display::palette16::Palette16;
 use agb::display::WIDTH;
-use agb::fixnum::num;
 use agb::fixnum::Vector2D;
 use agb::interrupt::VBlank;
 use agb::mgba::Mgba;
@@ -95,17 +94,14 @@ pub fn entry(mut gba: agb::Gba) -> ! {
             game.update(&mut sfx);
 
             // Update scroll
-            let Vector2D { x: sx, y: sy } = game.scroll_pos;
-            if let Ok(sx2) = sx.trunc().try_into() {
-                if let Ok(sy2) = sy.trunc().try_into() {
-                    bg2.set_pos(&mut vram, -Vector2D { x: sx2, y: sy2 });
-                }
-            }
-            if let Ok(sx3) = (sx * num!(0.6)).trunc().try_into() {
-                if let Ok(sy3) = (sy * num!(0.8)).trunc().try_into() {
-                    bg3.set_pos(&mut vram, -Vector2D { x: sx3, y: sy3 });
-                }
-            }
+            bg2.set_pos(&mut vram, -game.scroll_pos);
+            bg3.set_pos(
+                &mut vram,
+                -Vector2D {
+                    x: (game.scroll_pos.x * 6) / 10,
+                    y: (game.scroll_pos.y * 8) / 10,
+                },
+            );
 
             game.render(&mut sprite_loader, oam);
 

@@ -1,4 +1,3 @@
-use agb::display::tiled::MapLoan;
 use crate::behaviors::Behavior;
 use crate::level::EntityType;
 use crate::sfx::Sfx;
@@ -6,13 +5,12 @@ use crate::util::lerp;
 use agb::display::object::OamIterator;
 use agb::display::object::ObjectUnmanaged;
 use agb::display::object::SpriteLoader;
-use agb::display::tiled::RegularMap;
 use agb::display::HEIGHT;
 use agb::display::WIDTH;
 use agb::fixnum::num;
 use agb::fixnum::Num;
 use agb::fixnum::Rect;
-use agb::fixnum::{FixedNum, Vector2D};
+use agb::fixnum::Vector2D;
 use agb::input::ButtonController;
 use agb::input::Tri;
 use alloc::vec;
@@ -37,7 +35,7 @@ pub struct Game<'a> {
     enemies: Vec<ActorKey>,
     frame: usize,
     render_cache: Vec<RenderCache>,
-    pub scroll_pos: Vector2D<FixedNum<8>>,
+    pub scroll_pos: Vector2D<i32>,
 }
 
 impl<'a> Game<'a> {
@@ -70,7 +68,7 @@ impl<'a> Game<'a> {
                         maybe_size.map(|size| size.into()),
                         offset.into(),
                         Some((num!(1.4), num!(7.0)).into()),
-                        Some((num!(0.6), num!(0.6)).into()),
+                        Some((num!(0.6), num!(0.4)).into()),
                     );
                     let key = self.actors.insert(actor);
                     self.player = key;
@@ -87,18 +85,6 @@ impl<'a> Game<'a> {
                     );
                     let key = self.actors.insert(actor);
                     self.enemies.push(key);
-                    key
-                }
-                EntityType::Door => {
-                    let actor = Actor::new(
-                        entity.tags(),
-                        position.into(),
-                        maybe_size.map(|size| size.into()),
-                        offset.into(),
-                        None,
-                        None,
-                    );
-                    let key = self.actors.insert(actor);
                     key
                 }
             };
@@ -121,7 +107,7 @@ impl<'a> Game<'a> {
                         &*self.enemies,
                         &mut self.actors,
                         &self.input,
-                        self.level.collision_rects,
+                        &self.level,
                         sfx,
                     );
                 }
@@ -146,7 +132,8 @@ impl<'a> Game<'a> {
                         (bound_x - position.x).into(),
                         num!(0.05),
                     ),
-                ),
+                )
+                .trunc(),
                 y: Num::min(
                     bound_y,
                     lerp(
@@ -154,7 +141,8 @@ impl<'a> Game<'a> {
                         (bound_y - position.y).into(),
                         num!(0.05),
                     ),
-                ),
+                )
+                .trunc(),
             };
         }
 
@@ -186,7 +174,7 @@ impl<'a> Game<'a> {
                 let sprite = loader.get_vram_sprite(tag.animation_sprite(self.frame / 10));
                 let mut obj = ObjectUnmanaged::new(sprite);
                 let position =
-                    actor.collision_mask.position + self.scroll_pos + actor.sprite_offset;
+                    actor.collision_mask.position + self.scroll_pos.into() + actor.sprite_offset;
                 obj.show()
                     .set_position(Vector2D {
                         x: position.x.trunc(),
