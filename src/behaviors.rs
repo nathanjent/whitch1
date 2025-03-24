@@ -66,6 +66,7 @@ impl Behavior {
             Self::Player => {
                 if let Some(actor) = actors.get_mut(current_key) {
                     let vx = actor.velocity.x;
+
                     match actor.direction_x {
                         Tri::Negative => {
                             if actor.velocity.x > -actor.max_velocity.x {
@@ -87,6 +88,7 @@ impl Behavior {
                         }
                         Tri::Zero => {}
                     }
+
                     if vx == actor.velocity.x {
                         actor.velocity.x =
                             util::lerp(actor.velocity.x, 0.into(), actor.acceleration.x)
@@ -105,13 +107,16 @@ impl Behavior {
                         actor.velocity.y += actor.acceleration.y;
                     }
 
-                    if actor.current_action == Action::Jump && actor.velocity.y == 0.into() {
+                    if actor.state != ActorState::Jumping
+                        && actor.current_action == Action::Jump
+                        && actor.velocity.y.trunc() == 0
+                    {
                         actor.state = ActorState::Jumping;
                         actor.velocity.y -= actor.max_velocity.y;
                         sfx.jump();
                     }
 
-                    if actor.current_action == Action::JumpCut && actor.velocity.y != 0.into() {
+                    if actor.current_action == Action::JumpCut && actor.velocity.y.trunc() < 0 {
                         actor.velocity.y = 0.into();
                     }
 
@@ -119,7 +124,9 @@ impl Behavior {
                         actor.velocity.y = 0.into();
                     }
 
-                    if actor.velocity.close_to_zero(num!(0.02)) {
+                    if actor.current_action != Action::JumpCut
+                        && actor.velocity.close_to_zero(num!(0.02))
+                    {
                         actor.velocity = (0, 0).into();
                         actor.state = ActorState::Idle;
                     }
@@ -148,8 +155,9 @@ impl Behavior {
                     logger.as_mut().and_then(|l| {
                         l.print(
                             format_args!(
-                                "player_state: {:?} x: {} y: {} vx: {} vy: {}",
+                                "player_state: {:?} current_action: {:?} x: {} y: {} vx: {} vy: {}",
                                 actor.state,
+                                actor.current_action,
                                 actor.collision_mask.position.x,
                                 actor.collision_mask.position.y,
                                 actor.velocity.x,
